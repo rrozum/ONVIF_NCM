@@ -1,0 +1,41 @@
+{
+  "name": "onvif-ncm",
+  "version": "0.1.7",
+  "description": "ONVIF Network Camera Manager.",
+  "engines": {
+    "node": ">=4.4"
+  },
+  "main": "./lib/node-onvif.js",
+  "files": [
+    "lib",
+    "sample",
+    "app"
+  ],
+  "directories": {
+    "lib": "./lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ONVIF",
+    "Camera",
+    "Network Camera",
+    "Security Camera",
+    "Baby Camera",
+    "PTZ"
+  ],
+  "homepage": "https://github.com/rrozum/ONVIF_NCM",
+  "author": "Rozum Roman <romanrozum@yandex.ru> (https://github.com/rrozum)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rrozum/ONVIF_NCM.git"
+  },
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "html": ">=1.0.0",
+    "websocket": "^1.0.28",
+    "xml2js": ">=0.4.17"
+  }
+}
