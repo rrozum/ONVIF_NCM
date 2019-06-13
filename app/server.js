@@ -146,12 +146,17 @@ function startDiscovery(conn) {
 }
 
 function connect(conn, params) {
-	var device = devices[params.address];
+	// var device = devices[params.address];
+	var device = new onvif.OnvifDevice({
+		xaddr: 'http://' + params.address + ':' + params.port + '/onvif/device_service'
+	});
+	devices[params.address] = device;
 	if(!device) {
 		var res = {'id': 'connect', 'error': 'The specified device is not found: ' + params.address};
 		conn.send(JSON.stringify(res));
 		return;
 	}
+	console.log(device);
 	if(params.user) {
 		device.setAuth(params.user, params.pass);
 	}

@@ -12,6 +12,7 @@ function OnvifManager() {
 	this.el = { // jQuery objects for the HTML elements
 		'frm_con' : $('#connect-form'),
 		'sel_dev' : $('#connect-form input[name="device"]'),
+		'sel_port' : $('#connect-form input[name="port"]'),
 		'inp_usr' : $('#connect-form input[name="user"]'),
 		'inp_pas' : $('#connect-form input[name="pass"]'),
 		'btn_con' : $('#connect-form button[name="connect"]'),
@@ -149,6 +150,7 @@ OnvifManager.prototype.connectDevice = function() {
 	console.log(this.el['sel_dev'].val());
 	this.sendRequest('connect', {
 		'address': this.el['sel_dev'].val(),
+		'port'	 : this.el['sel_port'].val(),
 		'user'   : this.el['inp_usr'].val(),
 		'pass'   : this.el['inp_pas'].val()
 	});
@@ -184,7 +186,7 @@ OnvifManager.prototype.startDiscoveryCallback = function(data) {
 OnvifManager.prototype.connectCallback = function(data) {
 	this.el['btn_con'].prop('disabled', false);
 	if(data.result) {
-		this.selected_address = this.el['sel_dev'].val();
+		this.selected_address = this.el['sel_dev'].val().split(':')[0];
 		this.showConnectedDeviceInfo(this.selected_address, data.result);
 		this.el['btn_con'].text('Disconnect');
 		this.el['frm_con'].hide();
@@ -215,6 +217,7 @@ OnvifManager.prototype.showConnectedDeviceInfo = function(address, data) {
 };
 
 OnvifManager.prototype.fetchSnapshot = function() {
+	console.log(this.selected_address);
 	this.sendRequest('fetchSnapshot', {
 		'address': this.selected_address
 	});
