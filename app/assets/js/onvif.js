@@ -101,7 +101,6 @@ OnvifManager.prototype.initWebSocketConnection = function() {
 	}.bind(this);
 	this.ws.onmessage = function(res) {
 		var data = JSON.parse(res.data);
-		console.log(data);
 		var id = data.id;
 		if(id === 'startDiscovery') {
 			this.startDiscoveryCallback(data);
@@ -147,7 +146,6 @@ OnvifManager.prototype.connectDevice = function() {
 	console.log('connect');
 	this.disabledLoginForm(true);
 	this.el['btn_con'].text('Connecting...');
-	console.log(this.el['sel_dev'].val());
 	this.sendRequest('connect', {
 		'address': this.el['sel_dev'].val(),
 		'port'	 : this.el['sel_port'].val(),
@@ -217,7 +215,6 @@ OnvifManager.prototype.showConnectedDeviceInfo = function(address, data) {
 };
 
 OnvifManager.prototype.fetchSnapshot = function() {
-	console.log(this.selected_address);
 	this.sendRequest('fetchSnapshot', {
 		'address': this.selected_address
 	});

@@ -151,24 +151,25 @@ function connect(conn, params) {
 		xaddr: 'http://' + params.address + ':' + params.port + '/onvif/device_service'
 	});
 	devices[params.address] = device;
-	if(!device) {
-		var res = {'id': 'connect', 'error': 'The specified device is not found: ' + params.address};
-		conn.send(JSON.stringify(res));
-		return;
-	}
-	console.log(device);
 	if(params.user) {
 		device.setAuth(params.user, params.pass);
 	}
-	device.init((error, result) => {
-		var res = {'id': 'connect'};
-		if(error) {
-			res['error'] = error.toString();
-		} else {
-			res['result'] = result;
-		}
+	try {
+		device.init((error, result) => {
+			var res = {'id': 'connect'};
+			if(error) {
+				res['error'] = error.toString();
+			} else {
+				res['result'] = result;
+			}
+			conn.send(JSON.stringify(res));
+		});
+	} catch (e) {
+		var res = {'id': 'connect', 'error': 'The specified device is not found: ' + params.address, 'detail': e};
 		conn.send(JSON.stringify(res));
-	});
+		return;
+	}
+
 }
 
 // For Debug --------------------------------------------
