@@ -38,8 +38,8 @@ function OnvifManager() {
 OnvifManager.prototype.init = function() {
 	this.initWebSocketConnection();
 	$(window).on('resize', this.adjustSize.bind(this));
-	this.el['btn_con'].on('click', this.pressedConnectButton.bind(this));
-	this.el['btn_dcn'].on('click', this.pressedConnectButton.bind(this));
+	// this.el['btn_con'].on('click', this.pressedConnectButton.bind(this));
+	// this.el['btn_dcn'].on('click', this.pressedConnectButton.bind(this));
 	$(document.body).on('keydown', this.ptzMove.bind(this));
 	$(document.body).on('keyup', this.ptzStop.bind(this));
 	this.el['btn_hme'].on('click', this.ptzGotoHome.bind(this));
@@ -124,6 +124,7 @@ OnvifManager.prototype.initWebSocketConnection = function() {
 	this.ws.onopen = function() {
 		console.log('WebSocket connection established.');
 		// this.sendRequest('startDiscovery');
+		this.pressedConnectButton(this);
 	}.bind(this);
 	this.ws.onclose = function(event) {
 		console.log('WebSocket connection closed.');
