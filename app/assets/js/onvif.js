@@ -25,6 +25,7 @@ function OnvifManager() {
 		'ptz_pad' : $('#connected-device div.ptz-pad-box'),
 		'zom_in'  : $('#connected-device div.ptz-zom-ctl-box button.ptz-zom-in'),
 		'zom_out' : $('#connected-device div.ptz-zom-ctl-box button.ptz-zom-ot'),
+		'save_prtsc': $('#connected-device button[name="prtsc"]'),
 	};
 	this.selected_address = '';
 	this.device_connected = false;
@@ -44,7 +45,7 @@ OnvifManager.prototype.init = function() {
 	this.el['btn_hme'].on('touchstart', this.ptzGotoHome.bind(this));
 	this.el['btn_hme'].on('touchend', this.ptzGotoHome.bind(this));
 	this.el['ptz_pad'].on('mousedown', this.ptzMove.bind(this));
-	this.el['ptz_pad'].on('mouseup', this.ptzStop.bind(this));
+	this.el['ptz_pad'].on('mouseup', this.ptzStop.bind(this)	);
 	this.el['ptz_pad'].on('touchstart', this.ptzMove.bind(this));
 	this.el['ptz_pad'].on('touchend', this.ptzStop.bind(this));
 	this.el['zom_in'].on('mousedown', this.ptzMove.bind(this));
@@ -55,6 +56,8 @@ OnvifManager.prototype.init = function() {
 	this.el['zom_out'].on('mouseup', this.ptzStop.bind(this));
 	this.el['zom_out'].on('touchstart', this.ptzMove.bind(this));
 	this.el['zom_out'].on('touchend', this.ptzStop.bind(this));
+	this.el['save_prtsc'].on('keydown', this.saveScreenshot.bind(this));
+	this.el['save_prtsc'].on('click', this.saveScreenshot.bind(this));
 };
 
 OnvifManager.prototype.adjustSize = function() {
@@ -114,7 +117,7 @@ OnvifManager.prototype.initWebSocketConnection = function() {
 			this.ptzStopCallback(data);
 		} else if(id === 'ptzHome') {
 			this.ptzHomeCallback(data);
-		}
+		};
 	}.bind(this);
 };
 
@@ -353,5 +356,40 @@ OnvifManager.prototype.ptzStopCallback = function(data) {
 OnvifManager.prototype.ptzHomeCallback = function(data) {
 	// do nothing
 };
+
+OnvifManager.prototype.saveScreenshot = function (data) {
+	if ((data.ctrlKey && data.keyCode === 67) || data.type === 'click') {
+		var src = this.el['img_snp'].attr('src');
+		console.log(src);
+		const blob = this.b64toBlob(src, 'image/jpeg');
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `Screen.jpeg`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+	}
+};
+
+OnvifManager.prototype.b64toBlob = (b64Data, contentType = '', sliceSize = 512) => {
+	const byteCharacters = atob(b64Data.replace(/^data:image\/(png|jpeg|jpg);base64,/, ''));
+	const byteArrays = [];
+
+	for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+		const slice = byteCharacters.slice(offset, offset + sliceSize);
+
+		const byteNumbers = new Array(slice.length);
+		for (let i = 0; i < slice.length; i++) {
+			byteNumbers[i] = slice.charCodeAt(i);
+		}
+
+		const byteArray = new Uint8Array(byteNumbers);
+
+		byteArrays.push(byteArray);
+	}
+
+	return new Blob(byteArrays, {type: contentType});
+}
 
 })();
