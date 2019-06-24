@@ -18,6 +18,7 @@ function OnvifManager() {
 		'btn_con' : $('#connect-form button[name="connect"]'),
 		'div_pnl' : $('#connected-device'),
 		'img_snp' : $('#connected-device img.snapshot'),
+		'img_scope' : $('#connected-device img.scope'),
 		'btn_dcn' : $('#connected-device button[name="disconnect"]'),
 		'mdl_msg' : $('#message-modal'),
 		'ptz_spd' : $('input[name="ptz-speed"]'),
@@ -56,7 +57,7 @@ OnvifManager.prototype.init = function() {
 	this.el['zom_out'].on('mouseup', this.ptzStop.bind(this));
 	this.el['zom_out'].on('touchstart', this.ptzMove.bind(this));
 	this.el['zom_out'].on('touchend', this.ptzStop.bind(this));
-	this.el['save_prtsc'].on('keydown', this.saveScreenshot.bind(this));
+	$(document.body).on('keydown', this.saveScreenshot.bind(this));
 	this.el['save_prtsc'].on('click', this.saveScreenshot.bind(this));
 };
 
@@ -66,26 +67,55 @@ OnvifManager.prototype.adjustSize = function() {
 	var x = rect.left + window.pageXOffset;
 	var y = rect.top + window.pageYOffset;
 	var w = rect.width;
-	var h = window.innerHeight - y - 10;
+	var h = window.innerHeight - y - 5;
 	div_dom_el.style.height = h + 'px';
 	var aspect_ratio = w / h;
 	var snapshot_aspect_ratio = this.snapshot_w / this.snapshot_h;
 	var img_dom_el = this.el['img_snp'].get(0);
+	var scope_dom_el = this.el['img_scope'].get(0);
+	var dom_elements = [];
+
+	dom_elements.push(img_dom_el, scope_dom_el);
+
+	// if(snapshot_aspect_ratio > aspect_ratio) {
+	// 	img_w = w;
+	// 	img_h = (w / snapshot_aspect_ratio);
+	// 	img_dom_el.style.width = img_w + 'px';
+	// 	img_dom_el.style.height = img_h + 'px';
+	// 	img_dom_el.style.left = '0px';
+	// 	img_dom_el.style.top = ((h - img_h) / 2) + 'px';
+	// } else {
+	// 	img_h = h;
+	// 	img_w = (h * snapshot_aspect_ratio);
+	// 	img_dom_el.style.height = img_h + 'px';
+	// 	img_dom_el.style.width = img_w + 'px';
+	// 	img_dom_el.style.left = ((w - img_w) / 2) + 'px';
+	// 	img_dom_el.style.top = '0px';
+	// }
 
 	if(snapshot_aspect_ratio > aspect_ratio) {
 		img_w = w;
 		img_h = (w / snapshot_aspect_ratio);
-		img_dom_el.style.width = img_w + 'px';
-		img_dom_el.style.height = img_h + 'px';
-		img_dom_el.style.left = '0px';
-		img_dom_el.style.top = ((h - img_h) / 2) + 'px';
+		dom_elements.forEach(img_dom_el => {
+			img_dom_el.style.width = img_w + 'px';
+			img_dom_el.style.height = img_h + 'px';
+			img_dom_el.style.left = '0px';
+			img_dom_el.style.top = ((h - img_h) / 2) + 'px';
+		});
 	} else {
 		img_h = h;
 		img_w = (h * snapshot_aspect_ratio);
-		img_dom_el.style.height = img_h + 'px';
-		img_dom_el.style.width = img_w + 'px';
-		img_dom_el.style.left = ((w - img_w) / 2) + 'px';
-		img_dom_el.style.top = '0px';
+		dom_elements.forEach(img_dom_el => {
+			img_dom_el.style.height = img_h + 'px';
+			if (img_dom_el === scope_dom_el) {
+				img_dom_el.style.width = img_h + 'px';
+				img_dom_el.style.left = ((w - img_h) / 2) + 'px';
+			} else {
+				img_dom_el.style.width = img_w + 'px';
+				img_dom_el.style.left = ((w - img_w) / 2) + 'px';
+			}
+			img_dom_el.style.top = '0px';
+		});
 	}
 };
 

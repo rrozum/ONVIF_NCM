@@ -40,9 +40,16 @@ function httpServerRequest(req, res) {
 		} else {
 			var ctype = getContentType(fpath);
 			res.writeHead(200, {'Content-Type': ctype});
-			res.write(data);
-			res.end();
-			console.log('HTTP : 200 OK : ' + req.url);
+			if (ctype.indexOf('image') !== -1) {
+				require("fs").readFile(fpath, (err, image) => {
+					res.end(image);
+				});
+			} else {
+				res.write(data);
+				res.end();
+			}
+
+			console.log('HTTP : 200 OK : ' + req.url + ' ctype : ' + ctype);
 		}
 	});
 }
