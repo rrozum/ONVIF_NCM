@@ -60,7 +60,6 @@
 
 	<div id="connected-device">
 		<p><img class="snapshot" src=""></p>
-		<div class="device-info-box"><span class="name"></span> (<span class="address"></span>)</div>
 		<div class="ptz-ctl-box">
 			<div class="ptz-pad-box">
 				<button type="button" class="ptz-goto-home"><span class="glyphicon glyphicon-home"></span></button>
@@ -70,19 +69,11 @@
 				<span class="down glyphicon glyphicon-menu-down"></span>
 			</div>
 		</div>
-		<div class="ptz-spd-ctl-box">
-			<span class="label">PTZ speed for keyboard</span>
-			<div class="btn-group btn-group-sm" data-toggle="buttons">
-				<label class="btn btn-default"><input type="radio" name="ptz-speed" value="0.5"> slow</label>
-				<label class="btn btn-default"><input type="radio" name="ptz-speed" value="0.75"> medium</label>
-				<label class="btn btn-default active"><input type="radio" name="ptz-speed" value="1.0" checked> fast</label>
-			</div>
-		</div>
 		<div class="ptz-zom-ctl-box btn-group btn-group-lg" role="group" aria-label="Zoom">
 			<button type="button" class="ptz-zom ptz-zom-ot btn btn-default"><span class="glyphicon glyphicon-zoom-out"></span></button>
 			<button type="button" class="ptz-zom ptz-zom-in btn btn-default"><span class="glyphicon glyphicon-zoom-in"></span></button>
 		</div>
-		<div class="disconnect-box">
+		<div class="disconnect-box hide">
 			<button type="button" class="form-control btn btn-default" name="disconnect">Disconnect</button>
 		</div>
 	</div>
