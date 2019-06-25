@@ -71,6 +71,11 @@ h1 {
 	bottom: 80px;
 	left: 1em;
 }
+#connected-device div.settings-box {
+	position: absolute;
+	left: 1em;
+	bottom: 10px;
+}
 #connected-device div.ptz-ctl-box div.ptz-pad-box {
 	width: 160px;
 	height: 160px;

@@ -63,6 +63,9 @@
 				<span class="down glyphicon glyphicon-menu-down"></span>
 			</div>
 		</div>
+		<div class="settings-box">
+			<button type="button" class="btn btn-default" name="settings">Settings</button>
+		</div>
 		<div class="ptz-zom-ctl-box btn-group btn-group-lg" role="group" aria-label="Zoom">
 			<button type="button" class="ptz-zom ptz-zom-ot btn btn-default"><span class="glyphicon glyphicon-zoom-out"></span></button>
 			<button type="button" class="ptz-zom ptz-zom-in btn btn-default"><span class="glyphicon glyphicon-zoom-in"></span></button>
@@ -88,6 +91,54 @@
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="settings-modal">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button class="close" data-dismiss="modal" type="button"
+				aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title">Settings</h4>
+			</div>
+			<div class="modal-body">
+				<form class="form-horizontal" id="settings-form">
+					<div class="form-group">
+						<label for="device" class="col-sm-2 control-label">Device</label>
+						<div class="col-sm-10">
+							<input type="text" id="device" name="device" class="form-control" value="192.168.1.10">
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="port" class="col-sm-2 control-label">Port</label>
+						<div class="col-sm-10">
+							<input type="text" id="port" name="port" class="form-control" value="8899">
+						</div>
+					</div>
+					<!--<div class="form-group">-->
+						<!--<label for="user" class="col-sm-2 control-label">Username</label>-->
+						<!--<div class="col-sm-10">-->
+							<!--<input type="text" class="form-control" id="user" name="user">-->
+						<!--</div>-->
+					<!--</div>-->
+					<!--<div class="form-group">-->
+						<!--<label for="pass" class="col-sm-2 control-label">Password</label>-->
+						<!--<div class="col-sm-10">-->
+							<!--<input type="password" class="form-control" id="pass" name="pass">-->
+						<!--</div>-->
+					<!--</div>-->
+					<div class="form-group">
+						<label for="screen" class="col-sm-2 control-label">Screen</label>
+						<div class="col-sm-10"><input type="text" class="form-control" name="screen" id="screen" value="Ctrl+C"></div>
+					</div>
+					<button type="submit" class="form-control btn btn-primary" name="save-settings">Save</button>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
 			</div>
 		</div>
 	</div>

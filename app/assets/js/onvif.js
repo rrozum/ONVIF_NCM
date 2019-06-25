@@ -27,6 +27,9 @@ function OnvifManager() {
 		'zom_in'  : $('#connected-device div.ptz-zom-ctl-box button.ptz-zom-in'),
 		'zom_out' : $('#connected-device div.ptz-zom-ctl-box button.ptz-zom-ot'),
 		'save_prtsc': $('#connected-device button[name="prtsc"]'),
+		'settings': $('#connected-device button[name="settings"]'),
+		'mdl_settings': $('#settings-modal'),
+		'settings_form': $('#settings-form'),
 	};
 	this.selected_address = '';
 	this.device_connected = false;
@@ -59,6 +62,8 @@ OnvifManager.prototype.init = function() {
 	this.el['zom_out'].on('touchend', this.ptzStop.bind(this));
 	$(document.body).on('keydown', this.saveScreenshot.bind(this));
 	this.el['save_prtsc'].on('click', this.saveScreenshot.bind(this));
+	this.el['settings'].on('click', this.openSettings.bind(this));
+	this.el['settings_form'].on('submit', this.saveSettins.bind(this));
 };
 
 OnvifManager.prototype.adjustSize = function() {
@@ -242,6 +247,10 @@ OnvifManager.prototype.showMessageModal = function(title, message) {
 	this.el['mdl_msg'].modal('show');
 };
 
+OnvifManager.prototype.showSettingsModal = function() {
+	this.el['mdl_settings'].modal('show');
+};
+
 OnvifManager.prototype.showConnectedDeviceInfo = function(address, data) {
 	this.el['div_pnl'].find('span.name').text(data['Manufacturer'] + ' ' + data['Model']);
 	this.el['div_pnl'].find('span.address').text(address);
@@ -403,6 +412,34 @@ OnvifManager.prototype.saveScreenshot = function (data) {
 	}
 };
 
+OnvifManager.prototype.openSettings = function (data) {
+	this.showSettingsModal();
+};
+
+OnvifManager.prototype.saveSettins = function (data) {
+	data.preventDefault();
+	var serializeForm = $(data.currentTarget).serialize();
+	serializeForm = decodeURIComponent(serializeForm);
+
+		/**
+		 * формат данных
+		 0: "device=192.168.1.10"
+		 1: "port=8899"
+		 2: "screen=Ctrl+C"
+		 */
+	var unserializeForm = serializeForm.split('&');
+	var jsonSettings = {};
+
+	unserializeForm.forEach(row => {
+		var splitRow = row.split('=');
+		jsonSettings[splitRow[0]] = splitRow[1];
+	});
+
+	this.sendRequest('saveSettings', {
+		'settings': jsonSettings
+	});
+};
+
 OnvifManager.prototype.b64toBlob = (b64Data, contentType = '', sliceSize = 512) => {
 	const byteCharacters = atob(b64Data.replace(/^data:image\/(png|jpeg|jpg);base64,/, ''));
 	const byteArrays = [];
@@ -421,6 +458,6 @@ OnvifManager.prototype.b64toBlob = (b64Data, contentType = '', sliceSize = 512) 
 	}
 
 	return new Blob(byteArrays, {type: contentType});
-}
+};
 
 })();

@@ -113,7 +113,9 @@ function wsServerRequest(request) {
 			ptzStop(conn, params);
 		} else if(method === 'ptzHome') {
 			ptzHome(conn, params);
-		}
+		} else if(method === 'saveSettings') {
+		    saveSettings(conn, params);
+        }
 	});
 
 	conn.on("close", function(message) {
@@ -288,4 +290,18 @@ function ptzHome(conn, params) {
 		}
 		conn.send(JSON.stringify(res));
 	});
+}
+
+function saveSettings(conn, params) {
+    var fs = require("fs");
+
+    console.log(params.settings);
+
+    fs.writeFile("files/settings.json", JSON.stringify(params.settings), function (err) {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log("File created");
+        }
+    });
 }
