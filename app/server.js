@@ -12,6 +12,11 @@ var http = require('http');
 var fs = require('fs');
 var port = 8880;
 
+/**
+ * пользовательские настройки
+ */
+var settingPath = "files/settings.json";
+
 (function main() {
 	var http_server = http.createServer(httpServerRequest);
 	http_server.listen(port, function() {
@@ -115,6 +120,8 @@ function wsServerRequest(request) {
 			ptzHome(conn, params);
 		} else if(method === 'saveSettings') {
 		    saveSettings(conn, params);
+        } else if(method === 'getSettings') {
+		    getSettings(conn, params);
         }
 	});
 
@@ -293,15 +300,23 @@ function ptzHome(conn, params) {
 }
 
 function saveSettings(conn, params) {
-    var fs = require("fs");
-
-    console.log(params.settings);
-
-    fs.writeFile("files/settings.json", JSON.stringify(params.settings), function (err) {
+    fs.writeFile(settingPath, JSON.stringify(params.settings), function (err) {
         if (err) {
-            console.log(err);
+            var res = {'id': 'saveSettings', 'result': 'error', 'detail': err};
         } else {
-            console.log("File created");
+            res = {'id': 'saveSettings', 'result': 'ok', 'detail': 'File saved'};
         }
+        conn.send(JSON.stringify(res));
+    });
+}
+
+function getSettings(conn, params) {
+    fs.readFile(settingPath, 'utf8', function (error, data) {
+        if (error) {
+            var res = {'id': 'getSettings', 'result': 'error', 'detail': error};
+        }
+        res = {'id': 'getSettings', 'result': 'ok', 'detail': data};
+        console.log(JSON.stringify(res));
+        conn.send(JSON.stringify(res));
     });
 }

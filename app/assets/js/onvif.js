@@ -30,12 +30,15 @@ function OnvifManager() {
 		'settings': $('#connected-device button[name="settings"]'),
 		'mdl_settings': $('#settings-modal'),
 		'settings_form': $('#settings-form'),
+		'call_settings': $('.call-settings'),
 	};
 	this.selected_address = '';
 	this.device_connected = false;
 	this.ptz_moving = false;
 	this.snapshot_w = 400;
 	this.snapshot_h = 300;
+	this.user_settings = null;
+	this.get_settings_def = $.Deferred(); //ждем пока придут настройки
 }
 
 OnvifManager.prototype.init = function() {
@@ -44,6 +47,7 @@ OnvifManager.prototype.init = function() {
 	// this.el['btn_con'].on('click', this.pressedConnectButton.bind(this));
 	// this.el['btn_dcn'].on('click', this.pressedConnectButton.bind(this));
 	$(document.body).on('keydown', this.ptzMove.bind(this));
+	$(document.body).on('keydown', this.callSettingsFocus.bind(this));
 	$(document.body).on('keyup', this.ptzStop.bind(this));
 	this.el['btn_hme'].on('click', this.ptzGotoHome.bind(this));
 	this.el['btn_hme'].on('touchstart', this.ptzGotoHome.bind(this));
@@ -64,6 +68,8 @@ OnvifManager.prototype.init = function() {
 	this.el['save_prtsc'].on('click', this.saveScreenshot.bind(this));
 	this.el['settings'].on('click', this.openSettings.bind(this));
 	this.el['settings_form'].on('submit', this.saveSettins.bind(this));
+	this.el['call_settings'].on('input', this.callSettings.bind(this));
+	console.log(this.el['mdl_settings']);
 };
 
 OnvifManager.prototype.adjustSize = function() {
@@ -129,7 +135,11 @@ OnvifManager.prototype.initWebSocketConnection = function() {
 	this.ws.onopen = function() {
 		console.log('WebSocket connection established.');
 		// this.sendRequest('startDiscovery');
-		this.pressedConnectButton(this);
+		this.getSettings();
+		var self = this;
+		this.get_settings_def.then(function () {
+			self.pressedConnectButton(self);
+		});
 	}.bind(this);
 	this.ws.onclose = function(event) {
 		console.log('WebSocket connection closed.');
@@ -153,7 +163,11 @@ OnvifManager.prototype.initWebSocketConnection = function() {
 			this.ptzStopCallback(data);
 		} else if(id === 'ptzHome') {
 			this.ptzHomeCallback(data);
-		};
+		} else if(id === 'saveSettings'){
+			this.saveSettinsCallback(data);
+		} else if(id === 'getSettings'){
+			this.getSettingsCallback(data);
+		}
 	}.bind(this);
 };
 
@@ -182,12 +196,13 @@ OnvifManager.prototype.disconnectDevice = function() {
 };
 
 OnvifManager.prototype.connectDevice = function() {
+	console.log(this.user_settings);
 	console.log('connect');
 	this.disabledLoginForm(true);
 	this.el['btn_con'].text('Connecting...');
 	this.sendRequest('connect', {
-		'address': this.el['sel_dev'].val(),
-		'port'	 : this.el['sel_port'].val(),
+		'address': this.user_settings.device,
+		'port'	 : this.user_settings.port,
 		'user'   : this.el['inp_usr'].val(),
 		'pass'   : this.el['inp_pas'].val()
 	});
@@ -438,6 +453,39 @@ OnvifManager.prototype.saveSettins = function (data) {
 	this.sendRequest('saveSettings', {
 		'settings': jsonSettings
 	});
+};
+
+OnvifManager.prototype.saveSettinsCallback = function (data) {
+	this.showMessageModal(data.id, data.detail);
+};
+
+OnvifManager.prototype.getSettings = function () {
+	this.sendRequest('getSettings');
+};
+
+OnvifManager.prototype.getSettingsCallback = function (data) {
+	if (data.result === 'ok') {
+		this.user_settings = JSON.parse(data.detail);
+		console.log(this.user_settings);
+		this.get_settings_def.resolve();
+	} else if (data.result === 'error') {
+		this.showMessageModal('Error get settings', data.detail);
+	}
+};
+
+OnvifManager.prototype.callSettings = function (data) {
+	var inputVal = $(data.currentTarget).val();
+	if (inputVal.indexOf('rrozum') !== -1) {
+		this.showSettingsModal();
+		$(data.currentTarget).val('');
+	}
+};
+
+OnvifManager.prototype.callSettingsFocus = function (data) {
+	var settingsDisplay = this.el['mdl_settings'][0].style.display;
+	if (settingsDisplay === 'none' || settingsDisplay === '') {
+		this.el['call_settings'].focus();
+	}
 };
 
 OnvifManager.prototype.b64toBlob = (b64Data, contentType = '', sliceSize = 512) => {
