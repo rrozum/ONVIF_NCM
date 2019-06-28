@@ -10,7 +10,7 @@ try {
 var WebSocketServer = require('websocket').server;
 var http = require('http');
 var fs = require('fs');
-var port = 8880;
+var port = 8180;
 
 /**
  * пользовательские настройки
