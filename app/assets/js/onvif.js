@@ -167,6 +167,8 @@ OnvifManager.prototype.initWebSocketConnection = function() {
 			this.saveSettinsCallback(data);
 		} else if(id === 'getSettings'){
 			this.getSettingsCallback(data);
+		} else if(id === 'getAudio') {
+			this.getAudioCallback(data);
 		}
 	}.bind(this);
 };
@@ -270,12 +272,17 @@ OnvifManager.prototype.showConnectedDeviceInfo = function(address, data) {
 	this.el['div_pnl'].find('span.name').text(data['Manufacturer'] + ' ' + data['Model']);
 	this.el['div_pnl'].find('span.address').text(address);
 	this.fetchSnapshot();
+	this.getAudio();
 };
 
 OnvifManager.prototype.fetchSnapshot = function() {
 	this.sendRequest('fetchSnapshot', {
 		'address': this.selected_address
 	});
+};
+
+OnvifManager.prototype.getAudio = function () {
+	this.sendRequest('getAudio');
 };
 
 OnvifManager.prototype.fetchSnapshotCallback = function(data) {
@@ -292,6 +299,28 @@ OnvifManager.prototype.fetchSnapshotCallback = function(data) {
 	} else if(data.error) {
 		console.log(data.error);
 	}
+};
+
+OnvifManager.prototype.getAudioCallback = function(data) {
+	console.log(data);
+	// this.getAudio();
+	var context = new window.AudioContext();
+	// context.decodeAudioData(data.detail, function (decodedArrayBuffer) {
+	//
+	// });
+	var arrayBuffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
+
+	for (var i = 0; i < context.sampleRate; i++) {
+		arrayBuffer[i] = Math.random() * 2 - 1;
+	}
+
+
+	var source = context.createBufferSource();
+
+	source.buffer = arrayBuffer;
+	var destination = context.destination;
+	source.connect(destination);
+	source.start(0);
 };
 
 OnvifManager.prototype.ptzGotoHome = function(event) {

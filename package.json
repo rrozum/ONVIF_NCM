@@ -22,7 +22,6 @@
     "Camera",
     "Network Camera",
     "Security Camera",
-    "Baby Camera",
     "PTZ"
   ],
   "homepage": "https://github.com/rrozum/ONVIF_NCM",
@@ -35,6 +34,8 @@
   "readmeFilename": "README.md",
   "dependencies": {
     "html": ">=1.0.0",
+    "node-gyp": "^5.0.1",
+    "web-audio-api": "^0.2.2",
     "websocket": "^1.0.28",
     "xml2js": ">=0.4.17"
   }

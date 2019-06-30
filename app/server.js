@@ -122,7 +122,9 @@ function wsServerRequest(request) {
 		    saveSettings(conn, params);
         } else if(method === 'getSettings') {
 		    getSettings(conn, params);
-        }
+        } else if(method === 'getAudio') {
+			getAudio(conn, params);
+		}
 	});
 
 	conn.on("close", function(message) {
@@ -319,4 +321,25 @@ function getSettings(conn, params) {
         console.log(JSON.stringify(res));
         conn.send(JSON.stringify(res));
     });
+}
+
+function getAudio(conn, params) {
+	var AudioContext = require('web-audio-api').AudioContext,
+		context = new AudioContext;
+	var chanels = 1;
+	var arrayBuffer = context.createBuffer(chanels, context.sampleRate * 3, context.sampleRate);
+
+	var source = context.createBufferSource();
+
+	source.buffer = arrayBuffer;
+
+	// console.log(source);
+
+
+
+	// console.log('getAudio');
+	// var res = {'id': 'getAudio', 'result': 'ok', 'detail': context.destination._tick()};
+	// console.log(res);
+	// new ArrayBuffer(;
+	conn.send(JSON.stringify({'id': 'getAudio', 'result': 'ok', 'detail': source.buffer}));
 }
