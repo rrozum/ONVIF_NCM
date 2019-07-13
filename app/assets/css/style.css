@@ -82,6 +82,24 @@ h1 {
 	left: 1em;
 	bottom: 10px;
 }
+#connected-device div.audio-box {
+	position: absolute;
+	left: 1em;
+	bottom: 10px;
+	width: 50px;
+}
+#connected-device div.rec-box {
+    position: absolute;
+    left: 6em;
+    bottom: 10px;
+    width: 50px;
+}
+#connected-device div.pause-box {
+	position: absolute;
+	left: 13em;
+	bottom: 10px;
+	width: 50px;
+}
 #connected-device div.ptz-ctl-box div.ptz-pad-box {
 	width: 160px;
 	height: 160px;

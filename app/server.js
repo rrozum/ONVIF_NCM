@@ -10,7 +10,15 @@ try {
 var WebSocketServer = require('websocket').server;
 var http = require('http');
 var fs = require('fs');
+var mic = require('mic');
+var wav = require('wav');
 var port = 8180;
+var micInstance = null;
+var micInstanceStatus = 'stop';
+var micInstanceForRec = null;
+var recStatus = 'stop';
+var micInputStream = null;
+var micInputStreamForRec = null;
 
 /**
  * пользовательские настройки
@@ -22,6 +30,7 @@ var settingPath = "files/settings.json";
 	http_server.listen(port, function() {
 		console.log("Listening on port " + port);
 	});
+	console.log(http_server);
 	var wsserver = new WebSocketServer({
 		httpServer: http_server,
 	});
@@ -36,6 +45,9 @@ function httpServerRequest(req, res) {
 	}
 	if(path === '/') {
 		path = 'static/index.html';
+	} else if (path === '/demo') {
+		getAudioDemo(res);
+		return;
 	}
 	var fpath = './' + path;
 	fs.readFile(fpath, 'utf-8', function(err, data){
@@ -109,6 +121,14 @@ function wsServerRequest(request) {
 		if(method === 'startDiscovery') {
 			startDiscovery(conn);
 		} else if(method === 'connect') {
+			if (micInstance !== null) {
+				micInstance.stop();
+				micInstanceStatus = "stop";
+			}
+			if (micInstanceForRec !== null) {
+				micInstanceForRec.stop();
+				recStatus = "stop";
+			}
 			connect(conn, params);
 		} else if(method === 'fetchSnapshot') {
 			fetchSnapshot(conn, params);
@@ -123,7 +143,18 @@ function wsServerRequest(request) {
         } else if(method === 'getSettings') {
 		    getSettings(conn, params);
         } else if(method === 'getAudio') {
+			micInstance = new mic({
+				rate: '16000',
+				channels: '1',
+				debug: true,
+				exitOnSilence: 6
+			});
+			micInputStream = micInstance.getAudioStream();
+			micInstance.start();
+			micInstanceStatus = 'started';
 			getAudio(conn, params);
+		} else if(method === 'recAudio') {
+			recAudio(conn, params);
 		}
 	});
 
@@ -324,22 +355,87 @@ function getSettings(conn, params) {
 }
 
 function getAudio(conn, params) {
-	var AudioContext = require('web-audio-api').AudioContext,
-		context = new AudioContext;
-	var chanels = 1;
-	var arrayBuffer = context.createBuffer(chanels, context.sampleRate * 3, context.sampleRate);
+	var writer = new wav.Writer({
+		"channels": 1,
+		"sampleRate": 16000,
+		"bitDepth": 32
+	});
+	writer.pipe(micInputStream).on('data', function (data) {
+		// var response = JSON.stringify({'id': 'getAudio', 'result': 'ok', 'detail': data});
+		// conn.send(response);
+		console.log(data);
+		conn.send(data);
+	});
+	// console.log("Recieved Input Stream: " + data.length);
+	// conn.send(writer._header)
 
-	var source = context.createBufferSource();
+}
 
-	source.buffer = arrayBuffer;
+function recAudio(conn, params) {
+	var date = new Date();
+	var fileName = 'Record '
+		+ date.getDate() + '-'
+		+ date.getMonth() + '-'
+		+ date.getFullYear() + ' '
+		+ date.getHours() + '-'
+		+ date.getMinutes();
+	if (params.action === 'startRec') {
+		if (recStatus === 'stop') {
+			micInstanceForRec = new mic({
+				rate: '16000',
+				channels: '1',
+				debug: true,
+				exitOnSilence: 6
+			});
+			micInstanceForRec.start();
+			recStatus = 'started';
+			micInputStreamForRec = micInstanceForRec.getAudioStream();
+		}
+		var outputFileStream = new wav.FileWriter('files/records/' + fileName + '.wav', {
+			"channels": 1,
+			"sampleRate": 16000,
+			"bitDepth": 32
+		});
+		micInputStreamForRec.pipe(outputFileStream);
+	} else if (params.action === 'pauseRec') {
+		if (recStatus === 'started') {
+			micInstanceForRec.pause();
+			recStatus = 'pause';
+		}
+	} else if (params.action === 'resumeRec') {
+		if (recStatus === 'pause') {
+			micInstanceForRec.resume();
+			recStatus = 'started';
+		}
+	} else if (params.action === 'stopRec') {
+		if (recStatus === 'pause' || recStatus === 'started') {
+			micInstanceForRec.stop();
+			recStatus = 'stop';
+		}
+	}
+	var response = JSON.stringify({'id': 'recAudio', 'status': recStatus});
+	conn.send(response);
+}
 
-	// console.log(source);
+function getAudioDemo(response) {
+	micInstance = new mic({
+		rate: '16000',
+		channels: '1',
+		debug: true,
+		exitOnSilence: 6
+	});
+	micInstance.start();
+	micInputStream = micInstance.getAudioStream();
+	var writer = new wav.Writer({
+		"channels": 1,
+		"sampleRate": 16000,
+		"bitDepth": 32
+	});
+	var ctype = 'audio/vnd.wave';
+	console.log(writer._header);
+	// response.setHeader("Content-Type", ctype);
+	response.writeHead(200, {'Content-Type': ctype});
+	response.write(writer._header);
+	response.end();
 
-
-
-	// console.log('getAudio');
-	// var res = {'id': 'getAudio', 'result': 'ok', 'detail': context.destination._tick()};
-	// console.log(res);
-	// new ArrayBuffer(;
-	conn.send(JSON.stringify({'id': 'getAudio', 'result': 'ok', 'detail': source.buffer}));
 }

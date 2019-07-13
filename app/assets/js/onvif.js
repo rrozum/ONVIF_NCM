@@ -31,6 +31,9 @@ function OnvifManager() {
 		'mdl_settings': $('#settings-modal'),
 		'settings_form': $('#settings-form'),
 		'call_settings': $('.call-settings'),
+		'mic_audio': $('#connected-device div.audio-box button[name="mic"]'),
+		'rec_audio': $('#connected-device div.rec-box button[name="rec"]'),
+		'pause_audio': $('#connected-device div.pause-box button[name="pause"]'),
 	};
 	this.selected_address = '';
 	this.device_connected = false;
@@ -39,11 +42,19 @@ function OnvifManager() {
 	this.snapshot_h = 300;
 	this.user_settings = null;
 	this.get_settings_def = $.Deferred(); //ждем пока придут настройки
+	this.audio_context = new AudioContext();
+	this.audio_source = this.audio_context.createBufferSource();
+	this.audio = new Audio();
 }
 
 OnvifManager.prototype.init = function() {
 	this.initWebSocketConnection();
 	$(window).on('resize', this.adjustSize.bind(this));
+	console.log(this.el['mic_audio']);
+	self = this;
+	this.el['mic_audio'].on('click', function () {
+		self.getAudio();
+	});
 	// this.el['btn_con'].on('click', this.pressedConnectButton.bind(this));
 	// this.el['btn_dcn'].on('click', this.pressedConnectButton.bind(this));
 	$(document.body).on('keydown', this.ptzMove.bind(this));
@@ -69,7 +80,8 @@ OnvifManager.prototype.init = function() {
 	this.el['settings'].on('click', this.openSettings.bind(this));
 	this.el['settings_form'].on('submit', this.saveSettins.bind(this));
 	this.el['call_settings'].on('input', this.callSettings.bind(this));
-	console.log(this.el['mdl_settings']);
+	this.el['rec_audio'].on('click', this.recAudio.bind(this));
+	this.el['pause_audio'].on('click', this.pauseRec.bind(this));
 };
 
 OnvifManager.prototype.adjustSize = function() {
@@ -136,6 +148,7 @@ OnvifManager.prototype.initWebSocketConnection = function() {
 		console.log('WebSocket connection established.');
 		// this.sendRequest('startDiscovery');
 		this.getSettings();
+		// this.getAudio();
 		var self = this;
 		this.get_settings_def.then(function () {
 			self.pressedConnectButton(self);
@@ -149,27 +162,35 @@ OnvifManager.prototype.initWebSocketConnection = function() {
 		this.showMessageModal('Error', 'Failed to establish a WebSocket connection. Check if the server.js is running.');
 	}.bind(this);
 	this.ws.onmessage = function(res) {
-		var data = JSON.parse(res.data);
-		var id = data.id;
-		if(id === 'startDiscovery') {
-			this.startDiscoveryCallback(data);
-		} else if(id === 'connect') {
-			this.connectCallback(data);
-		} else if(id === 'fetchSnapshot') {
-			this.fetchSnapshotCallback(data);
-		} else if(id === 'ptzMove') {
-			this.ptzMoveCallback(data);
-		} else if(id === 'ptzStop') {
-			this.ptzStopCallback(data);
-		} else if(id === 'ptzHome') {
-			this.ptzHomeCallback(data);
-		} else if(id === 'saveSettings'){
-			this.saveSettinsCallback(data);
-		} else if(id === 'getSettings'){
-			this.getSettingsCallback(data);
-		} else if(id === 'getAudio') {
-			this.getAudioCallback(data);
+		try{
+			var data = JSON.parse(res.data);
+			var id = data.id;
+			if(id === 'startDiscovery') {
+				this.startDiscoveryCallback(data);
+			} else if(id === 'connect') {
+
+				this.connectCallback(data);
+			} else if(id === 'fetchSnapshot') {
+				this.fetchSnapshotCallback(data);
+			} else if(id === 'ptzMove') {
+				this.ptzMoveCallback(data);
+			} else if(id === 'ptzStop') {
+				this.ptzStopCallback(data);
+			} else if(id === 'ptzHome') {
+				this.ptzHomeCallback(data);
+			} else if(id === 'saveSettings'){
+				this.saveSettinsCallback(data);
+			} else if(id === 'getSettings'){
+				this.getSettingsCallback(data);
+			} else if(id === 'getAudio') {
+				this.getAudioCallback(data);
+			} else if(id === 'recAudio'){
+				this.recAudioCallback(data);
+			}
+		} catch (e) {
+			this.getAudioCallback(res);
 		}
+
 	}.bind(this);
 };
 
@@ -208,7 +229,7 @@ OnvifManager.prototype.connectDevice = function() {
 		'user'   : this.el['inp_usr'].val(),
 		'pass'   : this.el['inp_pas'].val()
 	});
-}
+};
 
 OnvifManager.prototype.disabledLoginForm = function(disabled) {
 	this.el['sel_dev'].prop('disabled', disabled);
@@ -265,6 +286,8 @@ OnvifManager.prototype.showMessageModal = function(title, message) {
 };
 
 OnvifManager.prototype.showSettingsModal = function() {
+	this.el['settings_form'].find('input#device').val(this.user_settings.device);
+	this.el['settings_form'].find('input#port').val(this.user_settings.port);
 	this.el['mdl_settings'].modal('show');
 };
 
@@ -272,7 +295,6 @@ OnvifManager.prototype.showConnectedDeviceInfo = function(address, data) {
 	this.el['div_pnl'].find('span.name').text(data['Manufacturer'] + ' ' + data['Model']);
 	this.el['div_pnl'].find('span.address').text(address);
 	this.fetchSnapshot();
-	this.getAudio();
 };
 
 OnvifManager.prototype.fetchSnapshot = function() {
@@ -302,25 +324,93 @@ OnvifManager.prototype.fetchSnapshotCallback = function(data) {
 };
 
 OnvifManager.prototype.getAudioCallback = function(data) {
-	console.log(data);
-	// this.getAudio();
-	var context = new window.AudioContext();
-	// context.decodeAudioData(data.detail, function (decodedArrayBuffer) {
+	var blob = data.data;
+	var reader = new FileReader();
+	reader.readAsDataURL(blob);
+	var self = this;
+	reader.onloadend = function() {
+		var base64data = reader.result;
+		base64data = base64data.replace(/^data:application\/octet-stream;/, 'data:audio/wav;');
+		// var arrayBuffer = b64ToArrayBuffer(btoa(base64data));
+		self.playMic(base64data);
+	};
+
+
+	// let fileReader = new FileReader();
+	// let arrayBuffer;
 	//
-	// });
-	var arrayBuffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
+	// fileReader.onloadend = () => {
+	// 	arrayBuffer = fileReader.result;
+	// 	this.playMic(arrayBuffer);
+	// };
+	//
+	// fileReader.readAsArrayBuffer(blob);
+	// var bufferLength = data.detail.data.length;
+	// var audioBuffer = this.audio_context.createBuffer(1, bufferLength, 16000);
+	// var arrayBuffer = new ArrayBuffer(bufferLength);
+	// arrayBuffer.buffer = data.detail.data;
+	// // for (var i = 0; i < bufferLength; i++) {
+	// // 	// audioBuffer[i] = data.detail.data[i];
+	// // 	audioBuffer[i] =  Math.random() * 2 - 1;
+	// // }
+	// console.log(arrayBuffer);
+	// // this.audio_context.decodeAudioData(audioBuffer, function (decodedArrayBuffer) {
+	// // 	audioBuffer = decodedArrayBuffer;
+	// // });
+	// // this.playMic(audioBuffer);
+	// var destination = this.audio_context.destination;
+	// this.audio_source = this.audio_context.createBufferSource();
+	// // this.audio_source.buffer = audioBuffer;
+	// audioBuffer.getChannelData( 0 ).set( audioBuffer );
+	// this.audio_source.connect(destination);
+	// this.audio_source.start(0);
+	// self = this;
+	// this.audio_source.onended = function () {
+	// 	console.log('onended');
+	// }
+};
 
-	for (var i = 0; i < context.sampleRate; i++) {
-		arrayBuffer[i] = Math.random() * 2 - 1;
+OnvifManager.prototype.playMic = function(data) {
+	this.audio.src = data;
+	var self = this;
+	this.audio.addEventListener('loadeddata', function () {
+		self.audio.play();
+	});
+	// audio.play();
+};
+
+OnvifManager.prototype.recAudio = function() {
+	if (this.el['rec_audio'].val() === 'Rec (Off)') {
+		this.sendRequest('recAudio', {action: "startRec"});
+	} else if (this.el['rec_audio'].val() === 'Rec (On)') {
+		this.sendRequest('recAudio', {action: "stopRec"});
 	}
+};
 
+OnvifManager.prototype.pauseRec = function() {
+	if (this.el['pause_audio'].val() === 'pause') {
+		this.sendRequest('recAudio', {action: 'pauseRec'});
+	} else if (this.el['pause_audio'].val() === 'resume') {
+		this.sendRequest('recAudio', {action: 'resumeRec'});
+	}
+};
 
-	var source = context.createBufferSource();
-
-	source.buffer = arrayBuffer;
-	var destination = context.destination;
-	source.connect(destination);
-	source.start(0);
+OnvifManager.prototype.recAudioCallback = function(data) {
+	console.log(data);
+	// this.el['rec_audio'].val('Rec (On)');
+	if (data.status === 'started') {
+		this.el['rec_audio'].val('Rec (On)');
+		this.el['rec_audio'].text('Rec (On)');
+	} else if (data.status === 'stop') {
+		this.el['rec_audio'].val('Rec (Off)');
+		this.el['rec_audio'].text('Rec (Off)');
+	} else if (data.status === 'pause') {
+		this.el['pause_audio'].val('resume');
+		this.el['pause_audio'].text('Resume');
+	} else if (data.status === 'resume') {
+		this.el['pause_audio'].val('pause');
+		this.el['pause_audio'].text('Pause');
+	}
 };
 
 OnvifManager.prototype.ptzGotoHome = function(event) {
@@ -460,6 +550,10 @@ OnvifManager.prototype.openSettings = function (data) {
 	this.showSettingsModal();
 };
 
+OnvifManager.prototype.startAudio = function (data) {
+
+};
+
 OnvifManager.prototype.saveSettins = function (data) {
 	data.preventDefault();
 	var serializeForm = $(data.currentTarget).serialize();
@@ -536,5 +630,15 @@ OnvifManager.prototype.b64toBlob = (b64Data, contentType = '', sliceSize = 512) 
 
 	return new Blob(byteArrays, {type: contentType});
 };
+
+function b64ToArrayBuffer(base64) {
+	var binary_string =  window.atob(base64);
+	var len = binary_string.length;
+	var bytes = new Uint8Array( len );
+	for (var i = 0; i < len; i++)        {
+		bytes[i] = binary_string.charCodeAt(i);
+	}
+	return bytes.buffer;
+}
 
 })();
