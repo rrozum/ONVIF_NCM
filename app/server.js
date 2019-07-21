@@ -12,6 +12,7 @@ var http = require('http');
 var fs = require('fs');
 var mic = require('mic');
 var wav = require('wav');
+var gpio = require("pi-gpio");
 var port = 8180;
 var micInstance = null;
 var micInstanceStatus = 'stop';
@@ -155,6 +156,8 @@ function wsServerRequest(request) {
 			getAudio(conn, params);
 		} else if(method === 'recAudio') {
 			recAudio(conn, params);
+		} else if(method === 'gpioMove') {
+			gpioMove(conn, params);
 		}
 	});
 
@@ -299,6 +302,29 @@ function ptzStop(conn, params) {
 			res['result'] = true;
 		}
 		conn.send(JSON.stringify(res));
+	});
+}
+
+
+function gpioMove(conn, params) {
+	if (params.speed.x > 0) {
+		var pinNumber = 11;
+		var pinValue = 1;
+	} else if (params.speed.x < 0) {
+		pinNumber = 12;
+		pinValue = 1;
+	} else if (params.speed.y > 0) {
+		pinNumber = 13;
+		pinValue = 1;
+	} else if (params.speed.y < 0) {
+		pinNumber = 15;
+		pinValue = 1;
+	}
+
+	gpio.open(pinNumber, "output", function(err) {		// Open pin for output
+		gpio.write(pinNumber, pinValue, function() {			// Set pin high (1)
+			gpio.close(pinNumber);						// Close pin
+		});
 	});
 }
 

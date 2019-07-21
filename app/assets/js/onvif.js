@@ -436,6 +436,7 @@ OnvifManager.prototype.ptzMove = function(event) {
 	this.ptz_moving = true;
 	var pos = {x: 0, y: 0, z: 0};
 	var speed = 1.0;
+	var zoom = false;
 
 	if(event.type === 'keydown') {
 		this.el['ptz_spd'].each(function(index, el) {
@@ -454,8 +455,10 @@ OnvifManager.prototype.ptzMove = function(event) {
 		} else if(c === 39) { // Right
 			pos.x = speed;
 		} else if((c === 107) || c === 187) { // Zoom in
+			zoom = true;
 			pos.z = speed;
 		} else if(c === 109 || c === 189) { // Zoom out
+			zoom = true;
 			pos.z = 0 - speed;
 		} else {
 			return;
@@ -486,6 +489,7 @@ OnvifManager.prototype.ptzMove = function(event) {
 			pos.x = d * Math.cos(rad);
 			pos.y = d * Math.sin(rad);
 		} else if(event.currentTarget.classList.contains('ptz-zom')) {
+			zoom = true;
 			if(event.currentTarget.classList.contains('ptz-zom-ot')) {
 				pos.z = -1.0;
 			} else if(event.currentTarget.classList.contains('ptz-zom-in')) {
@@ -499,8 +503,12 @@ OnvifManager.prototype.ptzMove = function(event) {
 	} else {
 		return;
 	}
-
-	this.sendRequest('ptzMove', {
+if (zoom) {
+	var method = 'ptzMove';
+} else {
+	method = 'gpioMove';
+}
+	this.sendRequest(method, {
 		'address': this.selected_address,
 		'speed'  : pos,
 		'timeout': 30
