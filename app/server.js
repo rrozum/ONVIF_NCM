@@ -311,10 +311,10 @@ function ptzStop(conn, params) {
 
 function gpioMove(conn, params) {
 	if (params.speed.x > 0) {
-		var pinNumber = 11;
+		var pinNumber = 32;
 		var pinValue = 1;
 	} else if (params.speed.x < 0) {
-		pinNumber = 12;
+		pinNumber = 33;
 		pinValue = 1;
 	} else if (params.speed.y > 0) {
 		pinNumber = 13;
