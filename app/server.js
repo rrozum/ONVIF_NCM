@@ -332,9 +332,9 @@ function gpioMove(conn, params) {
 		console.log('open pin ' + pinNumber);
 		gpio.write(pinNumber, pinValue, function() {			// Set pin high (1)
 			console.log('write pin ' + pinNumber + ', value ' + pinValue);
-			gpio.close(pinNumber, function () {
-				console.log('close pin ', pinNumber)
-			});						// Close pin
+			// gpio.close(pinNumber, function () {
+			// 	console.log('close pin ', pinNumber)
+			// });						// Close pin
 		});
 	});
 }
