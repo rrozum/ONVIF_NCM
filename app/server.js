@@ -310,11 +310,15 @@ function ptzStop(conn, params) {
 
 
 function gpioMove(conn, params) {
+	console.log('gpioMove: ');
+	console.log('----------');
+	console.log(params);
+	console.log('----------');
 	if (params.speed.x > 0) {
-		var pinNumber = 32;
+		var pinNumber = 11;
 		var pinValue = 1;
 	} else if (params.speed.x < 0) {
-		pinNumber = 33;
+		pinNumber = 12;
 		pinValue = 1;
 	} else if (params.speed.y > 0) {
 		pinNumber = 13;
@@ -325,8 +329,12 @@ function gpioMove(conn, params) {
 	}
 
 	gpio.open(pinNumber, "output", function(err) {		// Open pin for output
+		console.log('open pin ' + pinNumber);
 		gpio.write(pinNumber, pinValue, function() {			// Set pin high (1)
-			gpio.close(pinNumber);						// Close pin
+			console.log('write pin ' + pinNumber + ', value ' + pinValue);
+			gpio.close(pinNumber, function () {
+				console.log('close pin ', pinNumber)
+			});						// Close pin
 		});
 	});
 }
