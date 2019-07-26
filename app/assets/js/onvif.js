@@ -465,29 +465,20 @@ OnvifManager.prototype.ptzMove = function(event) {
 		}
 	} else if(event.type.match(/^(mousedown|touchstart)$/)) {
 		if(event.currentTarget.classList.contains('ptz-pad-box')) {
-			var rect = event.currentTarget.getBoundingClientRect();
-			var cx = event.clientX;
-			var cy = event.clientY;
-			if(event.type === 'touchstart') {
-				if(event.targetTouches[0]) {
-					cx = event.targetTouches[0].clientX;
-					cy = event.targetTouches[0].clientY;
-				} else if(event.changedTouches[0]) {
-					cx = event.changedTouches[0].clientX;
-					cy = event.changedTouches[0].clientY;
+			this.el['ptz_spd'].each(function(index, el) {
+				if($(el).prop('checked') === true) {
+					speed = parseFloat($(el).val());
 				}
+			}.bind(this));
+			if(event.currentTarget.classList.contains('left')){
+				pos.x = 0 - speed;
+			} else if(event.currentTarget.classList.contains('right')) {
+				pos.x = speed;
+			} else if(event.currentTarget.classList.contains('up')) {
+				pos.y = speed;
+			} else if(event.currentTarget.classList.contains('down')) {
+				pos.y = 0 - speed;
 			}
-			var mx = cx - rect.left;
-			var my = cy - rect.top;
-			var w = rect.width;
-			var h = rect.height;
-			var r = Math.max(w, h) / 2;
-			var x = mx - r;
-			var y = r - my;
-			var d = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) / r;
-			var rad = Math.atan2(y, x);
-			pos.x = d * Math.cos(rad);
-			pos.y = d * Math.sin(rad);
 		} else if(event.currentTarget.classList.contains('ptz-zom')) {
 			zoom = true;
 			if(event.currentTarget.classList.contains('ptz-zom-ot')) {
@@ -500,18 +491,57 @@ OnvifManager.prototype.ptzMove = function(event) {
 		} else {
 			return;
 		}
+	} else if (event.type === 'keyup'){
+		var moveStop = true;
+		this.el['ptz_spd'].each(function(index, el) {
+			if($(el).prop('checked') === true) {
+				speed = parseFloat($(el).val());
+			}
+		}.bind(this));
+		var c = event.keyCode;
+		var s = event.shiftKey;
+		if(c === 38) { // Up
+			pos.y = speed;
+		} else if(c === 40) { // Down
+			pos.y = 0 - speed;
+		} else if(c === 37) { // Left
+			pos.x = 0 - speed;
+		} else if(c === 39) { // Right
+			pos.x = speed;
+		} else {
+			return;
+		}
+	} else if (event.type.match(/^(mouseup|touchend)$/)) {
+		if(event.currentTarget.classList.contains('ptz-pad-box')) {
+			moveStop = true;
+			this.el['ptz_spd'].each(function(index, el) {
+				if($(el).prop('checked') === true) {
+					speed = parseFloat($(el).val());
+				}
+			}.bind(this));
+			if(event.currentTarget.classList.contains('left')){
+				pos.x = 0 - speed;
+			} else if(event.currentTarget.classList.contains('right')) {
+				pos.x = speed;
+			} else if(event.currentTarget.classList.contains('up')) {
+				pos.y = speed;
+			} else if(event.currentTarget.classList.contains('down')) {
+				pos.y = 0 - speed;
+			}
+		}
 	} else {
 		return;
 	}
 if (zoom) {
 	var method = 'ptzMove';
+} else if (moveStop) {
+	method = 'moveStop';
 } else {
 	method = 'gpioMove';
 }
 	this.sendRequest(method, {
 		'address': this.selected_address,
-		'speed'  : pos,
-		'timeout': 30
+		'speed'  : pos
 	});
 	event.preventDefault();
 	event.stopPropagation();

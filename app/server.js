@@ -158,6 +158,8 @@ function wsServerRequest(request) {
 			recAudio(conn, params);
 		} else if(method === 'gpioMove') {
 			gpioMove(conn, params);
+		} else if(method === 'moveStop') {
+			moveStop(conn, params);
 		}
 	});
 
@@ -310,32 +312,80 @@ function ptzStop(conn, params) {
 
 
 function gpioMove(conn, params) {
-	console.log('gpioMove: ');
-	console.log('----------');
-	console.log(params);
-	console.log('----------');
-	if (params.speed.x > 0) {
-		var pinNumber = 11;
-		var pinValue = 1;
-	} else if (params.speed.x < 0) {
+	var pinValue = 1;
+	var out = "output";
+	if (params.speed.x === 1.0) {
+		var pinNumber = 12;
+		var pinSpeed = 16; //min
+	} else if (params.speed.x === 2.0) {
 		pinNumber = 12;
-		pinValue = 1;
-	} else if (params.speed.y > 0) {
+		pinSpeed = 18; //max
+	} else if (params.speed.x === -1.0) {
+		pinNumber = 11;
+		pinSpeed = 16;
+	} else if (params.speed.x === -2.0) {
+		pinNumber = 11;
+		pinSpeed = 18;
+	} else if (params.speed.y === 1.0) {
 		pinNumber = 13;
-		pinValue = 1;
-	} else if (params.speed.y < 0) {
+		pinSpeed = 16;
+	} else if (params.speed.y === 2.0) {
+		pinNumber = 13;
+		pinSpeed = 18;
+	} else if (params.speed.y === -1.0) {
 		pinNumber = 15;
-		pinValue = 1;
+		pinSpeed = 16;
+	} else if (params.speed.y === -2.0) {
+		pinNumber = 15;
+		pinSpeed = 18;
 	}
 
-	gpio.open(pinNumber, "output", function(err) {		// Open pin for output
+	gpio.open(pinNumber, out, function(err) {		// Open pin for output
 		console.log('open pin ' + pinNumber);
 		gpio.write(pinNumber, pinValue, function() {			// Set pin high (1)
 			console.log('write pin ' + pinNumber + ', value ' + pinValue);
-			// gpio.close(pinNumber, function () {
-			// 	console.log('close pin ', pinNumber)
-			// });						// Close pin
 		});
+	});
+	gpio.open(pinSpeed, out, function (err) {
+		console.log('open pin ' + pinSpeed);
+		gpio.write(pinSpeed, pinValue, function () {
+			console.log('write pin ' + pinSpeed + ', value ' + pinValue);
+		})
+	});
+}
+
+function moveStop(conn, params) {;
+	if (params.speed.x === 1.0) {
+		var pinNumber = 12;
+		var pinSpeed = 16; //min
+	} else if (params.speed.x === 2.0) {
+		pinNumber = 12;
+		pinSpeed = 18; //max
+	} else if (params.speed.x === -1.0) {
+		pinNumber = 11;
+		pinSpeed = 16;
+	} else if (params.speed.x === -2.0) {
+		pinNumber = 11;
+		pinSpeed = 18;
+	} else if (params.speed.y === 1.0) {
+		pinNumber = 13;
+		pinSpeed = 16;
+	} else if (params.speed.y === 2.0) {
+		pinNumber = 13;
+		pinSpeed = 18;
+	} else if (params.speed.y === -1.0) {
+		pinNumber = 15;
+		pinSpeed = 16;
+	} else if (params.speed.y === -2.0) {
+		pinNumber = 15;
+		pinSpeed = 18;
+	}
+
+	gpio.close(pinNumber, function () {
+		console.log('close pin ', pinNumber);
+	});	// Close pin
+	gpio.close(pinSpeed, function () {
+		console.log('close pin ', pinSpeed);
 	});
 }
 
