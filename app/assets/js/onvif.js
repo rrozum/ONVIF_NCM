@@ -491,7 +491,29 @@ OnvifManager.prototype.ptzMove = function(event) {
 		} else {
 			return;
 		}
-	} else if (event.type === 'keyup'){
+	} else {
+		return;
+	}
+if (zoom) {
+	var method = 'ptzMove';
+} else {
+	method = 'gpioMove';
+}
+	this.sendRequest(method, {
+		'address': this.selected_address,
+		'speed'  : pos
+	});
+	event.preventDefault();
+	event.stopPropagation();
+};
+
+OnvifManager.prototype.ptzStop = function(event) {
+	if(!this.selected_address) {
+		return;
+	}
+	var pos = {x: 0, y: 0, z: 0};
+	var speed = 1.0;
+	if (event.type === 'keyup'){
 		var moveStop = true;
 		this.el['ptz_spd'].each(function(index, el) {
 			if($(el).prop('checked') === true) {
@@ -530,31 +552,19 @@ OnvifManager.prototype.ptzMove = function(event) {
 			}
 		}
 	} else {
-		return;
+		this.sendRequest('ptzStop', {
+			'address': this.selected_address
+		});
+		this.ptz_moving = false;
 	}
-if (zoom) {
-	var method = 'ptzMove';
-} else if (moveStop) {
-	method = 'moveStop';
-} else {
-	method = 'gpioMove';
-}
-	this.sendRequest(method, {
-		'address': this.selected_address,
-		'speed'  : pos
-	});
-	event.preventDefault();
-	event.stopPropagation();
-};
-
-OnvifManager.prototype.ptzStop = function(event) {
-	if(!this.selected_address) {
-		return;
+	if (moveStop) {
+		this.sendRequest('moveStop', {
+			'address': this.selected_address,
+			'speed'  : pos
+		});
+		event.preventDefault();
+		event.stopPropagation();
 	}
-	this.sendRequest('ptzStop', {
-		'address': this.selected_address
-	});
-	this.ptz_moving = false;
 };
 
 OnvifManager.prototype.ptzMoveCallback = function(data) {
