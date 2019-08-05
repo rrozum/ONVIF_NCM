@@ -310,6 +310,42 @@ function ptzStop(conn, params) {
 	});
 }
 
+function moveStop(conn, params) {
+	console.log('moveStop: ');
+	console.log(params.speed);
+	if (params.speed.x === 1.0) {
+		var pinNumber = 12;
+		var pinSpeed = 16; //min
+	} else if (params.speed.x === 2.0) {
+		pinNumber = 12;
+		pinSpeed = 18; //max
+	} else if (params.speed.x === -1.0) {
+		pinNumber = 11;
+		pinSpeed = 16;
+	} else if (params.speed.x === -2.0) {
+		pinNumber = 11;
+		pinSpeed = 18;
+	} else if (params.speed.y === 1.0) {
+		pinNumber = 13;
+		pinSpeed = 16;
+	} else if (params.speed.y === 2.0) {
+		pinNumber = 13;
+		pinSpeed = 18;
+	} else if (params.speed.y === -1.0) {
+		pinNumber = 15;
+		pinSpeed = 16;
+	} else if (params.speed.y === -2.0) {
+		pinNumber = 15;
+		pinSpeed = 18;
+	}
+
+	gpio.close(pinNumber, function () {
+		console.log('close pin ', pinNumber);
+	});	// Close pin
+	gpio.close(pinSpeed, function () {
+		console.log('close pin ', pinSpeed);
+	});
+}
 
 function gpioMove(conn, params) {
 	console.log('gpioMove: ');
@@ -352,43 +388,6 @@ function gpioMove(conn, params) {
 				console.log('write pin ' + pinNumber + ', value ' + pinValue);
 			});
 		});
-	});
-}
-
-function moveStop(conn, params) {
-	console.log('moveStop: ');
-	console.log(params.speed);
-	if (params.speed.x === 1.0) {
-		var pinNumber = 12;
-		var pinSpeed = 16; //min
-	} else if (params.speed.x === 2.0) {
-		pinNumber = 12;
-		pinSpeed = 18; //max
-	} else if (params.speed.x === -1.0) {
-		pinNumber = 11;
-		pinSpeed = 16;
-	} else if (params.speed.x === -2.0) {
-		pinNumber = 11;
-		pinSpeed = 18;
-	} else if (params.speed.y === 1.0) {
-		pinNumber = 13;
-		pinSpeed = 16;
-	} else if (params.speed.y === 2.0) {
-		pinNumber = 13;
-		pinSpeed = 18;
-	} else if (params.speed.y === -1.0) {
-		pinNumber = 15;
-		pinSpeed = 16;
-	} else if (params.speed.y === -2.0) {
-		pinNumber = 15;
-		pinSpeed = 18;
-	}
-
-	gpio.close(pinNumber, function () {
-		console.log('close pin ', pinNumber);
-	});	// Close pin
-	gpio.close(pinSpeed, function () {
-		console.log('close pin ', pinSpeed);
 	});
 }
 
