@@ -223,20 +223,14 @@ OnvifManager.prototype.connectDevice = function() {
 	console.log('connect');
 	this.disabledLoginForm(true);
 	this.el['btn_con'].text('Connecting...');
-
 	this.selected_address = this.el['sel_dev'].val().split(':')[0];
-	// this.showConnectedDeviceInfo(this.selected_address, data.result);
-	this.el['btn_con'].text('Disconnect');
-	this.el['frm_con'].hide();
-	this.el['div_pnl'].show();
-	this.device_connected = true;
-	//
-	// this.sendRequest('connect', {
-	// 	'address': this.user_settings.device,
-	// 	'port'	 : this.user_settings.port,
-	// 	'user'   : this.el['inp_usr'].val(),
-	// 	'pass'   : this.el['inp_pas'].val()
-	// });
+
+	this.sendRequest('connect', {
+		'address': this.user_settings.device,
+		'port'	 : this.user_settings.port,
+		'user'   : this.el['inp_usr'].val(),
+		'pass'   : this.el['inp_pas'].val()
+	});
 };
 
 OnvifManager.prototype.disabledLoginForm = function(disabled) {
