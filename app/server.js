@@ -26,7 +26,7 @@ var micInputStreamForRec = null;
 // ### GPIO ###
 const leftPin = 11; // 17 gpio
 const rigthtPin = 12; // 18 gpio
-const upPin = 13; // 27 gpio
+const upPin = 13; // 27 gpio // возможно в этом случае сработает 40й пин (ошибка библиотеки, но это не точно)
 const downPin = 15; // 22 gpio
 const minSpeed = 16; // 23 gpio
 const maxSpeed = 18; // 24 gpio
@@ -357,14 +357,33 @@ function moveStop(conn, params) {
 	} else if (params.speed.y === minusMin) { // down min
 	    pinNumber = downPin;
 	    pinSpeed = minSpeed;
+    } else {
+	    pinNumber = false;
+	    pinSpeed = false;
     }
 
-	gpio.close(pinNumber, function () {
-		console.log('close pin ', pinNumber);
-        gpio.close(pinSpeed, function () {
-            console.log('close pin ', pinSpeed);
+	if (pinNumber && pinSpeed) {
+	    gpio.read(pinNumber, function (err, val) {
+            if (val === 1) {
+                gpio.close(pinNumber, function () {
+                    console.log('close pin ', pinNumber);
+                    gpio.read(pinSpeed, function () {
+                        if (val === 1) {
+                            gpio.close(pinSpeed, function () {
+                                console.log('close pin ', pinSpeed);
+                            });
+                        }
+                    });
+                });
+            }
         });
-	});	// Close pin
+        gpio.close(pinNumber, function () {
+            console.log('close pin ', pinNumber);
+            gpio.close(pinSpeed, function () {
+                console.log('close pin ', pinSpeed);
+            });
+        });	// Close pin
+    }
 }
 
 function gpioMove(conn, params) {
@@ -399,20 +418,25 @@ function gpioMove(conn, params) {
     } else if (params.speed.y === minusMin) { // down min
         pinNumber = downPin;
         pinSpeed = minSpeed;
+    } else {
+        pinNumber = false;
+        pinSpeed = false;
     }
-	console.log(pinSpeed);
-	gpio.open(pinSpeed, out, function (err) {
-		console.log('open pin ' + pinSpeed);
-		gpio.write(pinSpeed, pinValue, function () {
-			console.log('write pin ' + pinSpeed + ', value ' + pinValue);
-		});
-		gpio.open(pinNumber, out, function(err) {		// Open pin for output
-			console.log('open pin ' + pinNumber);
-			gpio.write(pinNumber, pinValue, function() {			// Set pin high (1)
-				console.log('write pin ' + pinNumber + ', value ' + pinValue);
-			});
-		});
-	});
+
+    if (pinNumber && pinSpeed) {
+        gpio.open(pinSpeed, out, function (err) {
+            console.log('open pin ' + pinSpeed);
+            gpio.write(pinSpeed, pinValue, function () {
+                console.log('write pin ' + pinSpeed + ', value ' + pinValue);
+            });
+            gpio.open(pinNumber, out, function(err) {		// Open pin for output
+                console.log('open pin ' + pinNumber);
+                gpio.write(pinNumber, pinValue, function() {			// Set pin high (1)
+                    console.log('write pin ' + pinNumber + ', value ' + pinValue);
+                });
+            });
+        });
+    }
 }
 
 function ptzHome(conn, params) {
