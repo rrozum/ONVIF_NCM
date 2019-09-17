@@ -223,12 +223,20 @@ OnvifManager.prototype.connectDevice = function() {
 	console.log('connect');
 	this.disabledLoginForm(true);
 	this.el['btn_con'].text('Connecting...');
-	this.sendRequest('connect', {
-		'address': this.user_settings.device,
-		'port'	 : this.user_settings.port,
-		'user'   : this.el['inp_usr'].val(),
-		'pass'   : this.el['inp_pas'].val()
-	});
+
+	this.selected_address = this.el['sel_dev'].val().split(':')[0];
+	// this.showConnectedDeviceInfo(this.selected_address, data.result);
+	this.el['btn_con'].text('Disconnect');
+	this.el['frm_con'].hide();
+	this.el['div_pnl'].show();
+	this.device_connected = true;
+	//
+	// this.sendRequest('connect', {
+	// 	'address': this.user_settings.device,
+	// 	'port'	 : this.user_settings.port,
+	// 	'user'   : this.el['inp_usr'].val(),
+	// 	'pass'   : this.el['inp_pas'].val()
+	// });
 };
 
 OnvifManager.prototype.disabledLoginForm = function(disabled) {
@@ -429,67 +437,64 @@ OnvifManager.prototype.ptzGotoHome = function(event) {
 	});
 };
 
-	OnvifManager.prototype.ptzStop = function(event) {
-		console.log('ptzStop');
-		console.log(event);
-		if(!this.selected_address) {
-			return;
-		}
-		var pos = {x: 0, y: 0, z: 0};
-		var speed = 1.0;
-		if (event.type === 'keyup'){
-			var moveStop = true;
-			this.el['ptz_spd'].each(function(index, el) {
-				if($(el).prop('checked') === true) {
-					speed = parseFloat($(el).val());
-				}
-			}.bind(this));
-			var c = event.keyCode;
-			var s = event.shiftKey;
-			if(c === 38) { // Up
-				pos.y = speed;
-			} else if(c === 40) { // Down
-				pos.y = 0 - speed;
-			} else if(c === 37) { // Left
-				pos.x = 0 - speed;
-			} else if(c === 39) { // Right
-				pos.x = speed;
-			} else {
-				return;
-			}
-		} else if (event.type.match(/^(mouseup|touchend)$/)) {
-			if(event.currentTarget.classList.contains('ptz-pad-box')) {
-				moveStop = true;
-				this.el['ptz_spd'].each(function(index, el) {
-					if($(el).prop('checked') === true) {
-						speed = parseFloat($(el).val());
-					}
-				}.bind(this));
-				if(event.currentTarget.classList.contains('left')){
-					pos.x = 0 - speed;
-				} else if(event.currentTarget.classList.contains('right')) {
-					pos.x = speed;
-				} else if(event.currentTarget.classList.contains('up')) {
-					pos.y = speed;
-				} else if(event.currentTarget.classList.contains('down')) {
-					pos.y = 0 - speed;
-				}
-			}
-		} else {
-			this.sendRequest('ptzStop', {
-				'address': this.selected_address
-			});
-			this.ptz_moving = false;
-		}
-		if (moveStop) {
-			this.sendRequest('moveStop', {
-				'address': this.selected_address,
-				'speed'  : pos
-			});
-			event.preventDefault();
-			event.stopPropagation();
-		}
-	};
+OnvifManager.prototype.ptzStop = function(event) {
+    console.log('ptzStop');
+    console.log(event);
+    if(!this.selected_address) {
+        console.log('selected_address is empty or false');
+        return;
+    }
+    var pos = {x: 0, y: 0, z: 0};
+    var speed = 1.0;
+
+    this.el['ptz_spd'].each(function(index, el) {
+        if($(el).prop('checked') === true) {
+            speed = parseFloat($(el).val());
+        }
+    }.bind(this));
+
+    if (event.type === 'keyup'){
+        var moveStop = true;
+        var c = event.keyCode;
+        if(c === 38) { // Up
+            pos = this.ptzMoveUp(pos, speed);
+        } else if(c === 40) { // Down
+            pos = this.ptzMoveDown(pos, speed);
+        } else if(c === 37) { // Left
+            pos = this.ptzMoveLeft(pos, speed);
+        } else if(c === 39) { // Right
+            pos = this.ptzMoveRight(pos, speed);
+        } else {
+            return;
+        }
+    } else if (event.type.match(/^(mouseup|touchend)$/)) {
+        if(event.currentTarget.classList.contains('ptz-pad-box')) {
+            moveStop = true;
+            if(event.currentTarget.classList.contains('left')){
+                pos = this.ptzMoveLeft(pos, speed);
+            } else if(event.currentTarget.classList.contains('right')) {
+                pos = this.ptzMoveRight(pos, speed);
+            } else if(event.currentTarget.classList.contains('up')) {
+                pos = this.ptzMoveUp(pos, speed);
+            } else if(event.currentTarget.classList.contains('down')) {
+                pos = this.ptzMoveDown(pos, speed);
+            }
+        }
+    } else {
+        this.sendRequest('ptzStop', {
+            'address': this.selected_address
+        });
+        this.ptz_moving = false;
+    }
+    if (moveStop) {
+        this.sendRequest('moveStop', {
+            'address': this.selected_address,
+            'speed'  : pos
+        });
+        event.preventDefault();
+        event.stopPropagation();
+    }
+};
 
 OnvifManager.prototype.ptzMove = function(event) {
 	console.log('ptzMove');
@@ -501,23 +506,22 @@ OnvifManager.prototype.ptzMove = function(event) {
 	var pos = {x: 0, y: 0, z: 0};
 	var speed = 1.0;
 	var zoom = false;
+    this.el['ptz_spd'].each(function(index, el) {
+        if($(el).prop('checked') === true) {
+            speed = parseFloat($(el).val());
+        }
+    }.bind(this));
 
 	if(event.type === 'keydown') {
-		this.el['ptz_spd'].each(function(index, el) {
-			if($(el).prop('checked') === true) {
-				speed = parseFloat($(el).val());
-			}
-		}.bind(this));
 		var c = event.keyCode;
-		var s = event.shiftKey;
 		if(c === 38) { // Up
-			pos.y = speed;
+			pos = this.ptzMoveUp(pos, speed);
 		} else if(c === 40) { // Down
-			pos.y = 0 - speed;
+			pos = this.ptzMoveDown(pos, speed);
 		} else if(c === 37) { // Left
-			pos.x = 0 - speed;
+			pos = this.ptzMoveLeft(pos, speed);
 		} else if(c === 39) { // Right
-			pos.x = speed;
+			pos = this.ptzMoveRight(pos, speed);
 		} else if((c === 107) || c === 187) { // Zoom in
 			zoom = true;
 			pos.z = speed;
@@ -529,19 +533,14 @@ OnvifManager.prototype.ptzMove = function(event) {
 		}
 	} else if(event.type.match(/^(mousedown|touchstart)$/)) {
 		if(event.currentTarget.classList.contains('ptz-pad-box')) {
-			this.el['ptz_spd'].each(function(index, el) {
-				if($(el).prop('checked') === true) {
-					speed = parseFloat($(el).val());
-				}
-			}.bind(this));
 			if(event.currentTarget.classList.contains('left')){
-				pos.x = 0 - speed;
+				pos = this.ptzMoveLeft(pos, speed);
 			} else if(event.currentTarget.classList.contains('right')) {
-				pos.x = speed;
+				pos = this.ptzMoveRight(pos, speed);
 			} else if(event.currentTarget.classList.contains('up')) {
-				pos.y = speed;
+				pos = this.ptzMoveUp(pos, speed);
 			} else if(event.currentTarget.classList.contains('down')) {
-				pos.y = 0 - speed;
+				pos = this.ptzMoveDown(pos, speed);
 			}
 		} else if(event.currentTarget.classList.contains('ptz-zom')) {
 			zoom = true;
@@ -569,6 +568,26 @@ if (zoom) {
 	});
 	event.preventDefault();
 	event.stopPropagation();
+};
+
+OnvifManager.prototype.ptzMoveUp = function(pos, speed) {
+    pos.y = speed;
+    return pos;
+};
+
+OnvifManager.prototype.ptzMoveDown = function(pos, speed) {
+   pos.y = 0 - speed;
+   return pos;
+};
+
+OnvifManager.prototype.ptzMoveLeft = function(pos, speed) {
+   pos.x = 0 - speed;
+   return pos;
+};
+
+OnvifManager.prototype.ptzMoveRight = function(pos, speed) {
+   pos.x = speed;
+   return pos;
 };
 
 OnvifManager.prototype.ptzMoveCallback = function(data) {

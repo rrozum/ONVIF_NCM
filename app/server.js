@@ -21,6 +21,22 @@ var recStatus = 'stop';
 var micInputStream = null;
 var micInputStreamForRec = null;
 
+// ptz константы
+
+// ### GPIO ###
+const leftPin = 17; // 11 пин
+const rigthtPin = 18; // 12 пин
+const upPin = 27; // 13 пин
+const downPin = 22; // 15 пин
+const minSpeed = 23; // 16 пин
+const maxSpeed = 24; // 18 пин
+
+// ### Мои значения ###
+const minusMin = -1.0;
+const plusMin = 1.0;
+const minusMax = -2.0;
+const plusMax = 2.0;
+
 /**
  * пользовательские настройки
  */
@@ -313,38 +329,42 @@ function ptzStop(conn, params) {
 function moveStop(conn, params) {
 	console.log('moveStop: ');
 	console.log(params.speed);
-	if (params.speed.x === 1.0) {
-		var pinNumber = 12;
-		var pinSpeed = 16; //min
-	} else if (params.speed.x === 2.0) {
-		pinNumber = 12;
-		pinSpeed = 18; //max
-	} else if (params.speed.x === -1.0) {
-		pinNumber = 11;
-		pinSpeed = 16;
-	} else if (params.speed.x === -2.0) {
-		pinNumber = 11;
-		pinSpeed = 18;
-	} else if (params.speed.y === 1.0) {
-		pinNumber = 13;
-		pinSpeed = 16;
-	} else if (params.speed.y === 2.0) {
-		pinNumber = 13;
-		pinSpeed = 18;
-	} else if (params.speed.y === -1.0) {
-		pinNumber = 15;
-		pinSpeed = 16;
-	} else if (params.speed.y === -2.0) {
-		pinNumber = 15;
-		pinSpeed = 18;
-	}
+
+	if (params.speed.x === plusMin) {
+		var pinNumber = 18;
+		var pinSpeed = 23; //min
+	} else if (params.speed.x === plusMax) { // right max
+		pinNumber = rigthtPin;
+		pinSpeed = maxSpeed; //max
+	} else if (params.speed.x === plusMin) { // right min
+		pinNumber = rigthtPin;
+		pinSpeed = minSpeed;
+	} else if (params.speed.x === minusMax) { // left max
+		pinNumber = leftPin;
+		pinSpeed = maxSpeed;
+	} else if (params.speed.x === minusMin) { // left min
+		pinNumber = leftPin;
+		pinSpeed = minSpeed;
+	} else if (params.speed.y === plusMax) { // up max
+		pinNumber = upPin;
+		pinSpeed = maxSpeed;
+	} else if (params.speed.y === plusMin) { // up min
+		pinNumber = upPin;
+		pinSpeed = minSpeed;
+	} else if (params.speed.y === minusMax) { // down max
+		pinNumber = downPin;
+		pinSpeed = maxSpeed;
+	} else if (params.speed.y === minusMin) { // down min
+	    pinNumber = downPin;
+	    pinSpeed = minSpeed;
+    }
 
 	gpio.close(pinNumber, function () {
 		console.log('close pin ', pinNumber);
+        gpio.close(pinSpeed, function () {
+            console.log('close pin ', pinSpeed);
+        });
 	});	// Close pin
-	gpio.close(pinSpeed, function () {
-		console.log('close pin ', pinSpeed);
-	});
 }
 
 function gpioMove(conn, params) {
@@ -352,31 +372,35 @@ function gpioMove(conn, params) {
 	console.log(params.speed);
 	var pinValue = 1;
 	var out = "output";
-	if (params.speed.x === 1.0) {
-		var pinNumber = 12;
-		var pinSpeed = 16; //min
-	} else if (params.speed.x === 2.0) {
-		pinNumber = 12;
-		pinSpeed = 18; //max
-	} else if (params.speed.x === -1.0) {
-		pinNumber = 11;
-		pinSpeed = 16;
-	} else if (params.speed.x === -2.0) {
-		pinNumber = 11;
-		pinSpeed = 18;
-	} else if (params.speed.y === 1.0) {
-		pinNumber = 13;
-		pinSpeed = 16;
-	} else if (params.speed.y === 2.0) {
-		pinNumber = 13;
-		pinSpeed = 18;
-	} else if (params.speed.y === -1.0) {
-		pinNumber = 15;
-		pinSpeed = 16;
-	} else if (params.speed.y === -2.0) {
-		pinNumber = 15;
-		pinSpeed = 18;
-	}
+    if (params.speed.x === plusMin) {
+        var pinNumber = 18;
+        var pinSpeed = 23; //min
+    } else if (params.speed.x === plusMax) { // right max
+        pinNumber = rigthtPin;
+        pinSpeed = maxSpeed; //max
+    } else if (params.speed.x === plusMin) { // right min
+        pinNumber = rigthtPin;
+        pinSpeed = minSpeed;
+    } else if (params.speed.x === minusMax) { // left max
+        pinNumber = leftPin;
+        pinSpeed = maxSpeed;
+    } else if (params.speed.x === minusMin) { // left min
+        pinNumber = leftPin;
+        pinSpeed = minSpeed;
+    } else if (params.speed.y === plusMax) { // up max
+        pinNumber = upPin;
+        pinSpeed = maxSpeed;
+    } else if (params.speed.y === plusMin) { // up min
+        pinNumber = upPin;
+        pinSpeed = minSpeed;
+    } else if (params.speed.y === minusMax) { // down max
+        pinNumber = downPin;
+        pinSpeed = maxSpeed;
+    } else if (params.speed.y === minusMin) { // down min
+        pinNumber = downPin;
+        pinSpeed = minSpeed;
+    }
+	console.log(pinSpeed);
 	gpio.open(pinSpeed, out, function (err) {
 		console.log('open pin ' + pinSpeed);
 		gpio.write(pinSpeed, pinValue, function () {
