@@ -24,12 +24,12 @@ var micInputStreamForRec = null;
 // ptz константы
 
 // ### GPIO ###
-const leftPin = 17; // 11 пин
-const rigthtPin = 18; // 12 пин
-const upPin = 27; // 13 пин
-const downPin = 22; // 15 пин
-const minSpeed = 23; // 16 пин
-const maxSpeed = 24; // 18 пин
+const leftPin = 11; // 17 gpio
+const rigthtPin = 12; // 18 gpio
+const upPin = 13; // 27 gpio
+const downPin = 15; // 22 gpio
+const minSpeed = 16; // 23 gpio
+const maxSpeed = 18; // 24 gpio
 
 // ### Мои значения ###
 const minusMin = -1.0;
