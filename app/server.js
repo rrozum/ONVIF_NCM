@@ -290,6 +290,7 @@ function fetchSnapshot(conn, params) {
 
 function ptzMove(conn, params) {
 	// var device = devices[params.address];
+    console.log(devices);
 	var device = devices['10.255.0.242'];
 	if(!device) {
 		var res = {'id': 'ptzMove', 'error': 'The specified device is not found: ' + params.address};
@@ -330,12 +331,9 @@ function moveStop(conn, params) {
 	console.log('moveStop: ');
 	console.log(params.speed);
 
-	if (params.speed.x === plusMin) {
-		var pinNumber = 18;
-		var pinSpeed = 23; //min
-	} else if (params.speed.x === plusMax) { // right max
-		pinNumber = rigthtPin;
-		pinSpeed = maxSpeed; //max
+	if (params.speed.x === plusMax) { // right max
+		var pinNumber = rigthtPin;
+		var pinSpeed = maxSpeed; //max
 	} else if (params.speed.x === plusMin) { // right min
 		pinNumber = rigthtPin;
 		pinSpeed = minSpeed;
@@ -391,12 +389,9 @@ function gpioMove(conn, params) {
 	console.log(params.speed);
 	var pinValue = 1;
 	var out = "output";
-    if (params.speed.x === plusMin) {
-        var pinNumber = 18;
-        var pinSpeed = 23; //min
-    } else if (params.speed.x === plusMax) { // right max
-        pinNumber = rigthtPin;
-        pinSpeed = maxSpeed; //max
+	if (params.speed.x === plusMax) { // right max
+        var pinNumber = rigthtPin;
+        var pinSpeed = maxSpeed; //max
     } else if (params.speed.x === plusMin) { // right min
         pinNumber = rigthtPin;
         pinSpeed = minSpeed;
