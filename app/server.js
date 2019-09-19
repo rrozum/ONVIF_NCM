@@ -12,7 +12,7 @@ var http = require('http');
 var fs = require('fs');
 var mic = require('mic');
 var wav = require('wav');
-var gpio = require("pi-gpio");
+var Gpio = require("onoff").Gpio;
 var port = 8180;
 var micInstance = null;
 var micInstanceStatus = 'stop';
@@ -24,12 +24,12 @@ var micInputStreamForRec = null;
 // ptz константы
 
 // ### GPIO ###
-const leftPin = 11; // 17 gpio
-const rigthtPin = 12; // 18 gpio
-const upPin = 13; // 27 gpio // возможно в этом случае сработает 40й пин (ошибка библиотеки, но это не точно)
-const downPin = 15; // 22 gpio
-const minSpeed = 16; // 23 gpio
-const maxSpeed = 18; // 24 gpio
+const leftPin = new Gpio(17, "out");
+const rightPin = new Gpio(18, "out");
+const upPin = new Gpio(27, "out");
+const downPin = new Gpio(22, "out");
+const minSpeed = new Gpio(23, "out");
+const maxSpeed = new Gpio(24, "out");
 
 // ### Мои значения ###
 const minusMin = -1.0;
@@ -135,6 +135,7 @@ function wsServerRequest(request) {
 		var data = JSON.parse(message.utf8Data);
 		var method = data['method'];
 		var params = data['params'];
+		console.log('Method: ' + method);
 		if(method === 'startDiscovery') {
 			startDiscovery(conn);
 		} else if(method === 'connect') {
@@ -330,12 +331,12 @@ function ptzStop(conn, params) {
 function moveStop(conn, params) {
 	console.log('moveStop: ');
 	console.log(params.speed);
-
+	const pinValue = 0;
 	if (params.speed.x === plusMax) { // right max
-		var pinNumber = rigthtPin;
+		var pinNumber = rightPin;
 		var pinSpeed = maxSpeed; //max
 	} else if (params.speed.x === plusMin) { // right min
-		pinNumber = rigthtPin;
+		pinNumber = rightPin;
 		pinSpeed = minSpeed;
 	} else if (params.speed.x === minusMax) { // left max
 		pinNumber = leftPin;
@@ -361,39 +362,29 @@ function moveStop(conn, params) {
     }
 
 	if (pinNumber && pinSpeed) {
-	    gpio.read(pinNumber, function (err, val) {
-            if (val === 1) {
-                gpio.close(pinNumber, function () {
-                    console.log('close pin ', pinNumber);
-                    gpio.read(pinSpeed, function () {
-                        if (val === 1) {
-                            gpio.close(pinSpeed, function () {
-                                console.log('close pin ', pinSpeed);
-                            });
-                        }
-                    });
-                });
-            }
-        });
-        gpio.close(pinNumber, function () {
-            console.log('close pin ', pinNumber);
-            gpio.close(pinSpeed, function () {
-                console.log('close pin ', pinSpeed);
-            });
-        });	// Close pin
-    }
+		pinSpeed.read(function (err, val) {
+			console.log(val);
+			if(val === 1) {
+				pinSpeed.write(pinValue, function (err) {
+					pinNumber.writeSync(pinValue);
+					console.log('stop pin');
+				});
+				console.log('stop speed');
+			}
+		});
+	}
 }
 
 function gpioMove(conn, params) {
 	console.log('gpioMove: ');
 	console.log(params.speed);
-	var pinValue = 1;
+	const pinValue = 1;
 	var out = "output";
 	if (params.speed.x === plusMax) { // right max
-        var pinNumber = rigthtPin;
+        var pinNumber = rightPin;
         var pinSpeed = maxSpeed; //max
     } else if (params.speed.x === plusMin) { // right min
-        pinNumber = rigthtPin;
+        pinNumber = rightPin;
         pinSpeed = minSpeed;
     } else if (params.speed.x === minusMax) { // left max
         pinNumber = leftPin;
@@ -419,19 +410,16 @@ function gpioMove(conn, params) {
     }
 
     if (pinNumber && pinSpeed) {
-        gpio.open(pinSpeed, out, function (err) {
-            console.log('open pin ' + pinSpeed);
-            gpio.write(pinSpeed, pinValue, function () {
-                console.log('write pin ' + pinSpeed + ', value ' + pinValue);
-            });
-            gpio.open(pinNumber, out, function(err) {		// Open pin for output
-                console.log('open pin ' + pinNumber);
-                gpio.write(pinNumber, pinValue, function() {			// Set pin high (1)
-                    console.log('write pin ' + pinNumber + ', value ' + pinValue);
-                });
-            });
-        });
-    }
+    	pinSpeed.read(function (err, val) {
+    		console.log(val);
+			if(val === 0) {
+				pinSpeed.write(pinValue, function (err) {
+					pinNumber.writeSync(pinValue);
+				});
+				console.log('ok');
+			}
+		});
+	}
 }
 
 function ptzHome(conn, params) {
@@ -479,8 +467,9 @@ function getSettings(conn, params) {
     fs.readFile(settingPath, 'utf8', function (error, data) {
         if (error) {
             var res = {'id': 'getSettings', 'result': 'error', 'detail': error};
-        }
-        res = {'id': 'getSettings', 'result': 'ok', 'detail': data};
+        } else {
+			res = {'id': 'getSettings', 'result': 'ok', 'detail': data};
+		}
         console.log(JSON.stringify(res));
         conn.send(JSON.stringify(res));
     });

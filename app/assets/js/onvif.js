@@ -493,9 +493,9 @@ OnvifManager.prototype.ptzStop = function(event) {
 OnvifManager.prototype.ptzMove = function(event) {
 	console.log('ptzMove');
 	console.log(event);
-	if(this.device_connected === false || this.ptz_moving === true) {
-		return;
-	}
+	// if(this.device_connected === false || this.ptz_moving === true) {
+	// 	return;
+	// }
 	this.ptz_moving = true;
 	var pos = {x: 0, y: 0, z: 0};
 	var speed = 1.0;
@@ -556,6 +556,7 @@ if (zoom) {
 } else {
 	method = 'gpioMove';
 }
+console.log('Move method: ' + method);
 	this.sendRequest(method, {
 		'address': this.selected_address,
 		'speed'  : pos
