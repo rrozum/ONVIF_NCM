@@ -256,7 +256,7 @@ function fetchSnapshot(conn, params) {
 	//}
 	// ------------------------------------------------------
 	var device = devices[params.address];
-	var device = devices['10.255.0.242'];
+	// var device = devices['10.255.0.242'];
 	if(!device) {
 		var res = {'id': 'fetchSnapshot', 'error': 'The specified device is not found: ' + params.address};
 		conn.send(JSON.stringify(res));
@@ -290,9 +290,9 @@ function fetchSnapshot(conn, params) {
 }
 
 function ptzMove(conn, params) {
-	// var device = devices[params.address];
-    console.log(devices);
-	var device = devices['10.255.0.242'];
+	var device = devices[params.address];
+    // console.log(devices);
+	// var device = devices['10.255.0.242'];
 	if(!device) {
 		var res = {'id': 'ptzMove', 'error': 'The specified device is not found: ' + params.address};
 		conn.send(JSON.stringify(res));
@@ -310,8 +310,8 @@ function ptzMove(conn, params) {
 }
 
 function ptzStop(conn, params) {
-	// var device = devices[params.address];
-	var device = devices['10.255.0.242'];
+	var device = devices[params.address];
+	// var device = devices['10.255.0.242'];
 	if(!device) {
 		var res = {'id': 'ptzStop', 'error': 'The specified device is not found: ' + params.address};
 		conn.send(JSON.stringify(res));
@@ -472,6 +472,7 @@ function getSettings(conn, params) {
 		}
         console.log(JSON.stringify(res));
         conn.send(JSON.stringify(res));
+        //TODO сохранить настройки в переменную. И вообще поработать на системой write/read для настроек.пше ыефгt s
     });
 }
 
