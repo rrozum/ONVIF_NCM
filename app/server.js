@@ -165,7 +165,8 @@ function wsServerRequest(request) {
 				rate: '16000',
 				channels: '1',
 				debug: true,
-				exitOnSilence: 6
+				exitOnSilence: 6,
+				bitwidth: 16,
 			});
 			micInputStream = micInstance.getAudioStream();
 			micInstance.start();
@@ -477,28 +478,17 @@ function getSettings(conn, params) {
 }
 
 function getAudio(conn, params) {
-	var writer = new wav.Writer({
-		"channels": 1,
-		"sampleRate": 16000,
-		"bitDepth": 32
+	micInputStream.on('data', (chunk) => {
+		conn.sendBytes(chunk);
 	});
-	writer.pipe(micInputStream).on('data', function (data) {
-		// var response = JSON.stringify({'id': 'getAudio', 'result': 'ok', 'detail': data});
-		// conn.send(response);
-		console.log(data);
-		conn.send(data);
-	});
-	// console.log("Recieved Input Stream: " + data.length);
-	// conn.send(writer._header)
-
 }
 
 function recAudio(conn, params) {
 	var date = new Date();
-	var fileName = 'Record '
+	var fileName = 'Record_'
 		+ date.getDate() + '-'
 		+ date.getMonth() + '-'
-		+ date.getFullYear() + ' '
+		+ date.getFullYear() + '_'
 		+ date.getHours() + '-'
 		+ date.getMinutes();
 	if (params.action === 'startRec') {

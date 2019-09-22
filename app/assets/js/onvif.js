@@ -325,51 +325,24 @@ OnvifManager.prototype.fetchSnapshotCallback = function(data) {
 	}
 };
 
-OnvifManager.prototype.getAudioCallback = function(data) {
-	var blob = data.data;
-	var reader = new FileReader();
-	reader.readAsDataURL(blob);
-	var self = this;
-	reader.onloadend = function() {
-		var base64data = reader.result;
-		base64data = base64data.replace(/^data:application\/octet-stream;/, 'data:audio/wav;');
-		// var arrayBuffer = b64ToArrayBuffer(btoa(base64data));
-		self.playMic(base64data);
-	};
+OnvifManager.prototype.getAudioCallback = async function(data) {
+	var context = new AudioContext();
+	const channels = 1;
+	const rate = 16000;
+	const bits = 16;
+	var buffer = context.createBuffer(channels, data.data.size / bits * 8 / channels, rate);
+	var channel = buffer.getChannelData(0);
+	var arrayBuffer = await new Response(data.data).arrayBuffer();
+	var array = new Int16Array(arrayBuffer, 0, arrayBuffer.byteLength / bits * 8);
+	for (let i = 0; i < array.length; i++) {
+		channel[i] = array[i] / 128 / 256;
+	}
 
-
-	// let fileReader = new FileReader();
-	// let arrayBuffer;
-	//
-	// fileReader.onloadend = () => {
-	// 	arrayBuffer = fileReader.result;
-	// 	this.playMic(arrayBuffer);
-	// };
-	//
-	// fileReader.readAsArrayBuffer(blob);
-	// var bufferLength = data.detail.data.length;
-	// var audioBuffer = this.audio_context.createBuffer(1, bufferLength, 16000);
-	// var arrayBuffer = new ArrayBuffer(bufferLength);
-	// arrayBuffer.buffer = data.detail.data;
-	// // for (var i = 0; i < bufferLength; i++) {
-	// // 	// audioBuffer[i] = data.detail.data[i];
-	// // 	audioBuffer[i] =  Math.random() * 2 - 1;
-	// // }
-	// console.log(arrayBuffer);
-	// // this.audio_context.decodeAudioData(audioBuffer, function (decodedArrayBuffer) {
-	// // 	audioBuffer = decodedArrayBuffer;
-	// // });
-	// // this.playMic(audioBuffer);
-	// var destination = this.audio_context.destination;
-	// this.audio_source = this.audio_context.createBufferSource();
-	// // this.audio_source.buffer = audioBuffer;
-	// audioBuffer.getChannelData( 0 ).set( audioBuffer );
-	// this.audio_source.connect(destination);
-	// this.audio_source.start(0);
-	// self = this;
-	// this.audio_source.onended = function () {
-	// 	console.log('onended');
-	// }
+	var source = context.createBufferSource();
+	source.buffer = buffer;
+	source.connect(context.destination);
+	source.playbackRate.value = 2;
+	source.start();
 };
 
 OnvifManager.prototype.playMic = function(data) {
