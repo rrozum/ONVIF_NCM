@@ -148,7 +148,7 @@ OnvifManager.prototype.initWebSocketConnection = function() {
 		console.log('WebSocket connection established.');
 		// this.sendRequest('startDiscovery');
 		this.getSettings();
-		// this.getAudio();
+		this.getAudio();
 		var self = this;
 		this.get_settings_def.then(function () {
 			self.pressedConnectButton(self);
@@ -326,6 +326,7 @@ OnvifManager.prototype.fetchSnapshotCallback = function(data) {
 };
 
 OnvifManager.prototype.getAudioCallback = async function(data) {
+	console.log('getAudioCallback');
 	var context = new AudioContext();
 	const channels = 1;
 	const rate = 16000;
@@ -341,7 +342,7 @@ OnvifManager.prototype.getAudioCallback = async function(data) {
 	var source = context.createBufferSource();
 	source.buffer = buffer;
 	source.connect(context.destination);
-	source.playbackRate.value = 2;
+	source.playbackRate.value = 1.0;
 	source.start();
 };
 

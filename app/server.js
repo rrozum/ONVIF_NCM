@@ -161,16 +161,18 @@ function wsServerRequest(request) {
         } else if(method === 'getSettings') {
 		    getSettings(conn, params);
         } else if(method === 'getAudio') {
-			micInstance = new mic({
-				rate: '16000',
-				channels: '1',
-				debug: true,
-				exitOnSilence: 6,
-				bitwidth: 16,
-			});
-			micInputStream = micInstance.getAudioStream();
-			micInstance.start();
-			micInstanceStatus = 'started';
+			if (micInstanceStatus !== 'started') {
+				micInstance = new mic({
+					rate: '16000',
+					channels: '1',
+					debug: true,
+					// exitOnSilence: 6,
+					bitwidth: 16,
+				});
+				micInputStream = micInstance.getAudioStream();
+				micInstance.start();
+				micInstanceStatus = 'started';
+			}
 			getAudio(conn, params);
 		} else if(method === 'recAudio') {
 			recAudio(conn, params);
@@ -481,6 +483,9 @@ function getAudio(conn, params) {
 	micInputStream.on('data', (chunk) => {
 		conn.sendBytes(chunk);
 	});
+	micInputStream.on('error', (err) => {
+		console.log(err);
+	})
 }
 
 function recAudio(conn, params) {
